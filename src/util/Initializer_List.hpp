@@ -38,7 +38,7 @@
   limitations under the License.
 */
 /*
-  InitializerList.hpp [V1.1.0] (template class header/declaration file)
+  InitializerList.hpp [V1.0.0] (template class header/declaration file)
     By: Andrey Stroitelev
 
   ~This is a recreation of std::initializer_list for the arduino ide
@@ -58,7 +58,7 @@
 #define _INITIALIZER_LIST_HPP_
 
 #ifndef _INITIALIZER_LIST_VERSION_
-#define _INITIALIZER_LIST_VERSION_ 0x010100
+#define _INITIALIZER_LIST_VERSION_ 0x010000
 #endif
 
 
