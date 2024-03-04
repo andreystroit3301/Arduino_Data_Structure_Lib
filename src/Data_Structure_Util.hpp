@@ -38,13 +38,13 @@
 
 
 #include "Versions.h"
-#include "ArduinoUtil.h"
-#include "Utility.hpp"
-#include "Type_Traits.hpp"
-#include "Initializer_List.hpp"
-#include "Iterator_Traits.hpp"
-#include "Iterator.hpp"
-#include "Container.hpp"
+#include "util/ArduinoUtil.h"
+#include "util/Utility.hpp"
+#include "util/Type_Traits.hpp"
+#include "util/Initializer_List.hpp"
+#include "util/Iterator_Traits.hpp"
+#include "util/Iterator.hpp"
+#include "util/Container.hpp"
 
 
 #ifndef _DATA_STRUCTURE_UTIL_VERSION_
