@@ -38,7 +38,7 @@
   limitations under the License.
 */
 /*
-  TypeTraits.hpp [V1.1.0] (template class header/declaration file)
+  TypeTraits.hpp [V1.0.0] (template class header/declaration file)
     By: Andrey Stroitelev
 
   ~This header holds a few remade functions from the standard c++ type_traits library.
@@ -56,7 +56,7 @@
 #define _TYPE_TRAITS_HPP_
 
 #ifndef _TYPE_TRAITS_VERSION_
-#define _TYPE_TRAITS_VERSION_ 0x010100
+#define _TYPE_TRAITS_VERSION_ 0x010000
 #endif
 
 
