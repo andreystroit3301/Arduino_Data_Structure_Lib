@@ -38,6 +38,9 @@ still a bother I may add a seperate version that replaces all of the helper vari
 - [ ] update keywords.txt with available functions, classes, and constants
 - [ ] Finish testing currently implemented functions, classes, and metafunctions
 - [ ] Create directory for the container classes implemented in this library
+- [ ] Create data structures
+- [ ] Add global iterator functions/algorithms
+- [ ] Add container utility functions with their respective specializations
 
 ### NOTICE/CAUTION:
 * This library is made in the Arduino IDE, so I'm not sure if it will work in other IDEs like PlatformIO
