@@ -79,33 +79,10 @@ namespace std {
   // End of is_same implementation
 
 
-  // Start of qualifier removal helpers(remove_cv, remove_const, and remove_volatile):
-  template<class T> 
-  struct remove_cv { typedef T type; };
-  template<class T> 
-  struct remove_cv<const T> { typedef T type; };
-  template<class T> 
-  struct remove_cv<volatile T> { typedef T type; };
-  template<class T> 
-  struct remove_cv<const volatile T> { typedef T type; };
-
-  template<class T> 
-  struct remove_const { typedef T type; };
-  template<class T> 
-  struct remove_const<const T> { typedef T type; };
-
-  template<class T> 
-  struct remove_volatile { typedef T type; };
-  template<class T> 
-  struct remove_volatile<volatile T> { typedef T type; };
-
+  // Start of is_void implementation:
   template<class T>
-  using remove_cv_t = typename remove_cv<T>::type;
-  template<class T>
-  using remove_const_t = typename remove_const<T>::type;
-  template<class T>
-  using remove_volatile_t = typename remove_volatile<T>::type;
-  // End of qualifier removal helper implementation(remove_cv, remove_const, and remove_volatile)
+  struct is_void : public is_same<void, typename remove_cv<T>::type> { };
+  // End of is_void implementation 
 
 
   // Start of conditional implementation:
@@ -118,6 +95,42 @@ namespace std {
   template<bool B, class T, class F>
   using conditional_t = typename conditional<B, T, F>::type;
   // End of conditional implementation
+
+
+  // Start of helper conditional meta-function implementations:
+  template<class...>
+  struct __or_;
+
+  template<>
+  struct __or_<> : public false_type { };
+
+  template<class _B1>
+  struct __or_<_B1> : public _B1 { };
+
+  template<class _B1, class _B2>
+  struct __or_<_B1, _B2> : public conditional<_B1::value, _B1, _B2>::type { };
+
+  template<class _B1, class _B2, class _B3, class... _Bn>
+  struct __or_<_B1, _B2, _B3, _Bn...> : public conditional<_B1::value, _B1, __or_<_B2, _B3, _Bn...>>::type { };
+
+  template<class...>
+  struct __and_ { };
+
+  template<>
+  struct __and_<> : public true_type { };
+
+  template<class _B1>
+  struct __and_<_B1> : public _B1 { };
+
+  template<class _B1, class _B2>
+  struct __and_<_B1, _B2> : public conditional<_B1::value, _B2, _B1>::type { };
+
+  template<class _B1, class _B2, class _B3, class... _Bn>
+  struct __and_<_B1, _B2, _B3, _Bn...> : public conditional<_B1::value, __and_<_B2, _B3, _Bn...>, _B1>::type { };
+
+  template<class _Pp>
+  struct __not_ : public bool_constant<!_Pp::value> { };
+  // End of helper conditional meta-function implementations
 
 
   // Start of conjunction implementation:
@@ -133,12 +146,6 @@ namespace std {
   template<class... T>
   constexpr bool conjunction_v = conjunction<T...>::value;
   // End of conjunction implementation
-
-
-  // Start of is_void implementation:
-  template<class T>
-  struct is_void : public is_same<void, typename remove_cv<T>::type> { };
-  // End of is_void implementation 
 
 
   // Start of is_null_pointer type checker implementation:
@@ -169,6 +176,12 @@ namespace std {
   template<class T>
   constexpr bool is_pointer_v = is_pointer<T>::value;
   // End of is_pointer implementation
+
+
+  // Start of is_reference implementation:
+  template<class _Tp>
+  struct is_reference : public __or_<is_lvalue_reference<_Tp>, is_rvalue_reference<_Tp>>::type { };
+  // End of is_reference implementation
 
 
   // Start of is_member_pointer type checker implementation
@@ -293,6 +306,90 @@ namespace std {
   // End of is_class implementation
 
 
+  // Start of is_function implementation:
+  template<class>
+  struct is_function : public false_type { };
+
+  // start of Standard function checks
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...)> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......)> : public true_type { };
+  // end of standard function checks
+
+  // start of cv-qualified function checks
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) const> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) volatile> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) const volatile> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) const> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) volatile> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) const volatile> : public true_type { };
+  // End of cv-qualifed function checks
+
+  // Start of ref-qualified function checks
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) &> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) const &> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) volatile &> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) const volatile &> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) &> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) const &> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) volatile &> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) const volatile &> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) &&> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) const &&> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) volatile &&> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args...) const volatile &&> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) &&> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) const &&> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) volatile &&> : public true_type { };
+
+  template<class Ret, class... Args>
+  struct is_function<Ret(Args......) const volatile &&> : public true_type { };
+  // End of ref-qualified function checks
+  // End of is_function implementation
+
+
   // Start of is_arithmetic  type checker implementation:
   template<class T>
   struct is_arithmetic : public bool_constant<is_integral<T>::value || is_floating_point<T>::value> { };
@@ -312,6 +409,49 @@ namespace std {
   // End of is_scalar implementation
 
 
+  // Start of rank implementation
+  template<class>
+  struct rank : public integral_constant<size_t, 0> { };
+
+  template<class _Tp, size_t _Size>
+  struct rank<_Tp[_Size]> : public integral_constant<size_t, 1 + rank<_Tp>::value> { };
+
+  template<class _Tp>
+  struct rank<_Tp[]> : public integral_constant<size_t, 1 + rank<_Tp>::value> { };
+  // End of rank implementation
+
+
+  // Start of extent and remove_all_extents implementation:
+  template<class, unsigned = 0>
+  struct extent;
+
+  template<class>
+  struct remove_all_extents;
+
+  template<class, unsigned _Uint>
+  struct extent : public integral_constant<size_t, 0> { };
+
+  template<class _Tp, unsigned _Uint, size_t _Size>
+  struct extent<_Tp[_Size], _Uint> : public integral_constant<size_t, _Uint == 0 ? _Size : extent<_Tp, _Uint - 1>::value> { };
+
+  template<class _Tp, unsigned _Uint>
+  struct extent<_Tp[], _Uint> : public integral_constant<size_t, _Uint == 0 ? 0 : extent<_Tp, _Uint - 1>::value> { };
+
+  template<class _Tp>
+  struct remove_all_extents { typedef _Tp type; };
+
+  template<class _Tp, size_t _Size>
+  struct remove_all_extents<_Tp[_Size]> {
+    typedef typename remove_all_extents<_Tp>::type type;
+  };
+
+  template<class _Tp>
+  struct remove_all_extents<_Tp[]> {
+    typedef typename remove_all_extents<_Tp>::type type;
+  };
+  // End of extend and remove_all_extends implementation
+
+
   // Start of is_array type checker implementation:
   template<class T>
   struct is_array : public false_type { };
@@ -324,6 +464,12 @@ namespace std {
 
   template<class T>
   constexpr bool is_array_v = is_array<T>::value;
+
+  template<class _Tp>
+  struct __is_array_known_bounds : public bool_constant<(extent<_Tp>::value > 0)> { };
+
+  template<class _Tp>
+  struct __is_array_unknown_bounds : public __and_<is_array<_Tp>, __not_<extent<_Tp>>>::type { };
   // End of is_array implementation
 
 
@@ -333,6 +479,10 @@ namespace std {
                                        || is_array<T>::value
                                        || is_union<T>::value
                                        || is_class<T>::value> { };
+
+  // Old style implementation which may work better:
+  //template<class _Tp>
+  //struct is_object : public __not_<__or_<is_function<_Tp>, is_reference<_Tp>, is_void<_Tp>>>::type { };  
   // End of is_object implementation
 
 
@@ -386,7 +536,10 @@ namespace std {
   // Start of derived_from inheritance checker implementation:
   // arduino IDE doesn't support concepts so im implementing this as a constexpr bool that can be used with static_assert to get similar functionality
   template<class Derived, class Base>
-  constexpr bool derived_from = is_base_of_v<Base, Derived> && is_convertible_v<const volatile Derived*, const volatile Base*>;
+  struct derived_from : bool_constant<is_base_of<Base, Derived>::value && is_convertible<const volatile Derived*, const volatile Base*>::value> { };
+
+  template<class Derived, class Base>
+  constexpr bool derived_from_v = derived_from<Derived, Base>::value;
   // End of derived_from inheritance checker implementation
 
 
