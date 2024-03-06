@@ -66,6 +66,56 @@
 // Start of std:: namespace:
 namespace std {
 
+  // Start of qualifier removal helpers(remove_cv, remove_const, and remove_volatile):
+  template<class T> 
+  struct remove_cv { typedef T type; };
+  template<class T> 
+  struct remove_cv<const T> { typedef T type; };
+  template<class T> 
+  struct remove_cv<volatile T> { typedef T type; };
+  template<class T> 
+  struct remove_cv<const volatile T> { typedef T type; };
+
+  template<class T> 
+  struct remove_const { typedef T type; };
+  template<class T> 
+  struct remove_const<const T> { typedef T type; };
+
+  template<class T> 
+  struct remove_volatile { typedef T type; };
+  template<class T> 
+  struct remove_volatile<volatile T> { typedef T type; };
+
+  template<class T>
+  using remove_cv_t = typename remove_cv<T>::type;
+  template<class T>
+  using remove_const_t = typename remove_const<T>::type;
+  template<class T>
+  using remove_volatile_t = typename remove_volatile<T>::type;
+  // End of qualifier removal helper implementation(remove_cv, remove_const, and remove_volatile)
+
+
+  // Start of qualifier adding(add_cv, add_const, and add_volatile) meta-function implementation:
+  template<class T>
+  struct add_cv { typedef const volatile T type; };
+
+  template<class T>
+  struct add_const { typedef const T type; };
+
+  template<class T>
+  struct add_volatile { typedef volatile T type; };
+
+  template<class T>
+  using add_cv_t = typename add_cv<T>::type;
+
+  template<class T>
+  using add_const_t = typename add_const<T>::type;
+
+  template<class T>
+  using add_volatile_t = typename add_volatile<T>::type;
+  // End of add_cv, add_const, and add_volatile implementation
+
+
   // Start of integral_constant implementation:
   template<class T, T val>
   struct integral_constant {
@@ -152,6 +202,14 @@ namespace std {
   // Start of declval() implementation
   template<class T>
   typename add_rvalue_reference<T>::type declval() noexcept;
+  /*template<typename _Tp, typename _Up = _Tp&&>
+  _Up __declval(int);
+  
+  template<typename _Tp>
+  _Tp __declval(long);
+  
+  template<typename _Tp>
+  auto declval() noexcept -> decltype(__declval<_Tp>(0));*/
   // End of declval() implementation
 
 
@@ -177,7 +235,7 @@ namespace std {
   // End of forward() implementation
 
 
-  // Start of is_constructible checker implementations:
+  // Start of is_constructible and is_destructible checker implementations:
   template<class...>
   using void_t = void;
 
@@ -191,7 +249,20 @@ namespace std {
   using is_constructible = is_constructible_<void_t<>, T, Args...>;
 
   template<class T>
+  struct is_default_constructible : is_constructible<T> { };
+  
+  template<class T>
+  constexpr bool is_default_constructible_v = is_default_constructible<T>::value;
+
+  template<class T>
+  struct is_copy_constructible : is_constructible<T, typename add_lvalue_reference<typename add_const<T>::type>::type> { };
+  
+  template<class T>
+  constexpr bool is_copy_constructible_v = is_copy_constructible<T>::value;
+
+  template<class T>
   struct is_move_constructible : public is_constructible<T, typename add_rvalue_reference<T>::type> { };
+  
   template<class T>
   constexpr bool is_move_constructible_v = is_move_constructible<T>::value;
   // End of is_constructible checker implementations
@@ -208,7 +279,13 @@ namespace std {
   constexpr bool is_assignable_v = is_assignable<T, U>::value;
 
   template<class T>
-  struct is_move_assignable : is_assignable<typename add_lvalue_reference<T>::type, typename add_lvalue_reference<T>::type> { };
+  struct is_copy_assignable : is_assignable<typename add_lvalue_reference<T>::type, typename add_lvalue_reference<const T>::type> { };
+
+  template<class T>
+  constexpr bool is_copy_assignable_v = is_copy_assignable<T>::value;
+
+  template<class T>
+  struct is_move_assignable : is_assignable<typename add_lvalue_reference<T>::type, typename add_rvalue_reference<T>::type> { };
 
   template<class T>
   constexpr bool is_move_assignable_v = is_move_assignable<T>::value;
@@ -217,7 +294,7 @@ namespace std {
 
   // Start of initial swap() implementation:
   template<class T>
-  constexpr void swap(T& a, T& b) noexcept(is_move_constructible<T>::value && is_move_assignable<T>::value) {
+  constexpr void swap(T& a, T& b) /*noexcept(is_move_constructible<T>::value && is_move_assignable<T>::value)*/ {
     T tmp(move(a));
     a = move(b);
     b = move(tmp);
