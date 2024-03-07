@@ -23,7 +23,7 @@ This library adds an assortment of data structures from the C++ standard templat
 
 These data structures will use dynamic memory allocation the same way they do in libstdc++. Some containers like std::array do not use dynamic memory allocation since they have a set max size, so these containers
 will store data externally via a pointer to a reference. Since the Arduino IDE is using C++11 with some C++14 support there is no concept or requires keywords, so to get around this I implemented the concepts as
-abstract pure virtual classes and static assertions which will force the inheriting class to implement all of the required functions and constraints to meet the necessary requirements and constraints such as
+CRTP style meta-function checker structs and static assertions which will force the inheriting class to implement all of the required functions and constraints to meet the necessary requirements and constraints such as
 being default constructible, copy constructible/assignable, incrementable, is_integral, etc.
 
 Also this library will throw a list of compiler warnings(if you have warnings enabled in the Arduin IDE). These warnings can be ignored. The warnings given are for variable templates which only started being
@@ -32,15 +32,47 @@ supported in future versions of the Arduino IDE which would get rid of the warni
 still a bother I may add a seperate version that replaces all of the helper variable instances with their standard meta-function syntax (instead of is_base_of_v<T> you would be required to use is_base_of<T>::value)
 
 ### TO DO LIST:
-- [ ] Finish Iterator abstract base classes in util/Iterator.hpp
-- [ ] Finish Container abstract base class in util/Iterator.hpp
+- [X] ~~Finish Iterator abstract base classes in util/Iterator.hpp~~(Using CRTP to assert requirements at compile time instead of using interface classes to remove virtual function overhead)
+- [X] ~~Finish Container abstract base class in util/Iterator.hpp~~(Same as above)
+- [ ] Create CRTP checker class for the different required iterator operators
+- [ ] Create the main CRTP style base classes for the different iterator types
+- [ ] Create CRTP checker classes for the different required functions for containers
+- [ ] Create the main CRTP base class for containers
+- [ ] Create general CRTP meta-functions for trait checks such as is_incrementable etc. in util/Type_Traits.hpp
 - [ ] Add new test functions to example sketch
 - [ ] update keywords.txt with available functions, classes, and constants
 - [ ] Finish testing currently implemented functions, classes, and metafunctions
 - [ ] Create directory for the container classes implemented in this library
 - [ ] Create data structures
-- [ ] Add global iterator functions/algorithms
-- [ ] Add container utility functions with their respective specializations
+    - [ ] implement std::pair
+    - [ ] implement std::stack
+    - [ ] implement std::vector
+    - [ ] implement std::list
+    - [ ] implement std::forward_list
+    - [ ] implement std::queue
+    - [ ] implement std::priority_queue
+    - [ ] implement std::dequeue
+    - [ ] implement std::array
+    - [ ] implement std::map
+    - [ ] implement std::unordered_map
+    - [ ] implement std::multimap _(might not implement)_
+    - [ ] implement std::unordered_multimap _(might not implement)_
+    - [ ] implement std::flat_map _(might not implement)_
+    - [ ] implement std::flat_multimap _(might not implement)_
+    - [ ] implement std::set
+    - [ ] implement std::unordered_set
+    - [ ] implement std::multiset _(might not implement)_
+    - [ ] implement std::unordered_multiset _(might not implement)_
+    - [ ] implement std::flat_set _(might not implement)_
+    - [ ] implement std::flat_multiset _(might not implement)_
+    - [ ] implement std::span _(might not implement)_
+    - [ ] implement std::mdspan _(might not implement)_
+- [ ] Need to add global iterator functions/algorithms
+- [ ] Need to add container utility functions/algorithms with their respective specializations
+- [ ] Need to add arduino utility functions for faster IO read/write
+- [ ] Possibly will add internal comparator control functions
+- [ ] Need to add register/port control functions for abstraction
+- [ ] Possibly will add functions for faster pinMode _(if possible)_
 
 ### NOTICE/CAUTION:
 * This library is made in the Arduino IDE, so I'm not sure if it will work in other IDEs like PlatformIO
@@ -50,3 +82,4 @@ still a bother I may add a seperate version that replaces all of the helper vari
   - Use caution when using the data structures as they can cause you to run out of memory, and they can cause unrecoverable heap fragmentation depending on what you're storing.
     - The containers that use dynamic memory allocation all have code to properly manage that dynamic memory to avoid memory leaks, so if you make your own container class that dynamically allocates memory make sure its properly deleted.
       - To avoid heap fragmentation try to keep data structures in local scopes so the data is all in one chunck of memory that gets deleted together. This will help prevent empty memory blocks that are too small for the next bit of data to be allocated.
+    - NOTE: Currently I'm planning to have dynamic container capacity grow the standard way which is doubling in size every time it reaches max capacity.
