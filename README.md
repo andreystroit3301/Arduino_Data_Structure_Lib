@@ -39,7 +39,7 @@ properly supported in C++14, but the Arduino IDE runs on C++11 so a warning is g
 supported in future versions of the Arduino IDE which would get rid of the warnings. There is currently no way to add preprocessor directives to ignore specific warnings in the Arduino IDE. If the warnings are
 still a bother I may add a seperate version that replaces all of the helper variable instances with their standard meta-function syntax (instead of is_base_of_v<T> you would be required to use is_base_of<T>::value)
 
-### TO DO LIST:
+## MY TO DO LIST:
 - [X] ~~Finish Iterator abstract base classes in util/Iterator.hpp~~(Using CRTP to assert requirements at compile time instead of using interface classes to remove virtual function overhead)
 - [X] ~~Finish Container abstract base class in util/Iterator.hpp~~(Same as above)
 - [ ] Create CRTP checker class for the different required iterator operators and expressions
@@ -85,7 +85,7 @@ still a bother I may add a seperate version that replaces all of the helper vari
 - [ ] Need to add register/port control functions for abstraction
 - [ ] Possibly will add functions for faster pinMode _(if possible)_
 
-### NOTICE/CAUTION:
+## NOTICE/CAUTION:
 * This library is made in the Arduino IDE, so I'm not sure if it will work in other IDEs like PlatformIO
 * This library is specifically make for AVR boards like the UNO and Mega2560 which dont natively include/support the c++ standard template libraries.
   - Some Microcontrollers supported by the Arduino IDE already have the STL libraries available such as ESP32 board.
@@ -94,3 +94,7 @@ still a bother I may add a seperate version that replaces all of the helper vari
     - The containers that use dynamic memory allocation all have code to properly manage that dynamic memory to avoid memory leaks, so if you make your own container class that dynamically allocates memory make sure its properly deleted.
       - To avoid heap fragmentation try to keep data structures in local scopes so the data is all in one chunck of memory that gets deleted together. This will help prevent empty memory blocks that are too small for the next bit of data to be allocated.
     - NOTE: Currently I'm planning to have dynamic container capacity grow the standard way which is doubling in size every time it reaches max capacity.
+
+### My Info:
+  - Email: andrey.stroitelev3301@gmail.com
+  - URL: https://github.com/andreystroit3301
