@@ -8,23 +8,31 @@ This library was developed in Arduino IDE V2.3, so any users should have Arduino
 
 ## Description
 
-This library adds an assortment of data structures from the C++ standard template library. This adds most of the well known data structures including but not limited to:
+This library adds most of the data structures/containers found in the C++ STL library. These data structures will dynamically allocate and deallocate data, so they will function as they do for regular C++ 
+programming. I may eventually add static versions of the containers that have a constant max size for situations where you have very little SRAM like in a large program, or for when you're using an arduino
+board that has very low memory to begin with like the non-IOT boards and compact boards like the Arduino Nano or Arduino Pro Mini. I also added a large chunk of meta-functions from the <utility> and <type_traits>
+headers from libstdc++ since some will be required for the container implementations, and I just added some other meta-functions just because I think they could be useful when using the data structures.
+
+This adds most of the well known data structures including but not limited to:
   - std::vector
   - std::map
   - std::array
-  - std::forward_list
   - std::list
   - std::pair
   - std::tuple
   - std::set
   - std::queue
-  - std::dequeue
   - std::stack
 
 These data structures will use dynamic memory allocation the same way they do in libstdc++. Some containers like std::array do not use dynamic memory allocation since they have a set max size, so these containers
-will store data externally via a pointer to a reference. Since the Arduino IDE is using C++11 with some C++14 support there is no concept or requires keywords, so to get around this I implemented the concepts as
-CRTP style meta-function checker structs and static assertions which will force the inheriting class to implement all of the required functions and constraints to meet the necessary requirements and constraints such as
-being default constructible, copy constructible/assignable, incrementable, is_integral, etc.
+should be used over the dynamic containers when you have low memory to work with. Since the Arduino IDE is using C++11 with some C++14 support there is no concept or requires keywords, so to get around this I
+implemented the concepts as bool_constant trait checking meta-functions that will be static_asserted at compile time by the base class using CRTP which will force the inheriting class to implement all of the 
+required functions/operators to meet the necessary requirements and constraints such as being default constructible, copy constructible/assignable, incrementable, is_integral, etc,. The Type_Traits.hpp and 
+Utility.hpp files dont have the exact same functions as they do in libstdc++, so some type_traits functions are in Utility.hpp and some utility functions are in type_traits.hpp. I also added some of my own 
+functions which are mostly concepts being reimplemented as bool_constant metafunctions which will just do a check for a static_assertion somewhere to give the actual compile error. I may eventually make static 
+versions of the implemented containers to eliminate the risk of memory leaks and other issues for anyone who wants to use this library for one of the arduinos with really low memory like the UNO. I'm developing 
+this library directly in the Arduino IDE, and I'm using an Arduino MEGA(8k SRAM) for functional testing.
+
 
 Also this library will throw a list of compiler warnings(if you have warnings enabled in the Arduin IDE). These warnings can be ignored. The warnings given are for variable templates which only started being
 properly supported in C++14, but the Arduino IDE runs on C++11 so a warning is given. The template variables(which are meta-function helpers) still work correctly and as intended, and they may become officially
@@ -34,11 +42,14 @@ still a bother I may add a seperate version that replaces all of the helper vari
 ### TO DO LIST:
 - [X] ~~Finish Iterator abstract base classes in util/Iterator.hpp~~(Using CRTP to assert requirements at compile time instead of using interface classes to remove virtual function overhead)
 - [X] ~~Finish Container abstract base class in util/Iterator.hpp~~(Same as above)
-- [ ] Create CRTP checker class for the different required iterator operators
+- [ ] Create CRTP checker class for the different required iterator operators and expressions
+    + The requirements for iterators wont be exactly the same as in libstdc++, but the main operators will be required along with the necessary expressions needing to be valid
 - [ ] Create the main CRTP style base classes for the different iterator types
 - [ ] Create CRTP checker classes for the different required functions for containers
 - [ ] Create the main CRTP base class for containers
 - [ ] Create general CRTP meta-functions for trait checks such as is_incrementable etc. in util/Type_Traits.hpp
+- [ ] Finish adding needed functions and other quality of life functions to util/Utility.hpp
+- [ ] Finish adding needed functions and other quality of life functions to util/Type_Traits.hpp
 - [ ] Add new test functions to example sketch
 - [ ] update keywords.txt with available functions, classes, and constants
 - [ ] Finish testing currently implemented functions, classes, and metafunctions
