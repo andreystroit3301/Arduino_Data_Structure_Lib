@@ -311,6 +311,15 @@ namespace std {
   struct extent<_Tp[], _Uint> : public integral_constant<size_t, _Uint == 0 ? 0 : extent<_Tp, _Uint - 1>::value> { };
 
   template<class _Tp>
+  struct remove_extent { typedef _Tp type; };
+
+  template<class _Tp, size_t _Size>
+  struct remove_extent<_Tp[_Size]> { typedef _Tp type; };
+
+  template<class _Tp>
+  struct remove_extent<_Tp[]> { typedef _Tp type; };
+
+  template<class _Tp>
   struct remove_all_extents { typedef _Tp type; };
 
   template<class _Tp, size_t _Size>
@@ -322,6 +331,12 @@ namespace std {
   struct remove_all_extents<_Tp[]> {
     typedef typename remove_all_extents<_Tp>::type type;
   };
+
+  template<class _Tp>
+  using remove_extent_t = typename remove_extent<_Tp>::type;
+
+  template<class _Tp>
+  using remove_all_extents_t = typename remove_all_extents<_Tp>::type;
   // End of extend and remove_all_extends implementation
 
 
