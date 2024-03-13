@@ -1,9 +1,11 @@
-// GCC GNU Lincese boilerplate:      (this is required since this code is copyrighted under the GCC compiler. I did not design this myself.)
+// Libstdc++ and GCC GNU Lincese boilerplate:      (this is required since this code is copyrighted under the GCC compiler. I did not design this myself.)
 /*
-  Copyright (C) 2007-2013 Free Software Foundation, Inc.
+  Partial Modified Implementation Of Meta-Functions from the <initializer_list> Libstdc++ header  -*- C++ -*-
 
-  This file is part of the GNU ISO C++ Library.  This library is free
-  software; you can redistribute it and/or modify it under the
+  Copyright (C) 1997-2024 Free Software Foundation, Inc.
+
+  This file is copying, modifying, and referenceing the GNU ISO C++ Library. 
+  This library is free software; you can redistribute it and/or modify it under the
   terms of the GNU General Public License as published by the
   Free Software Foundation; either version 3, or (at your option)
   any later version.
@@ -19,11 +21,20 @@
 
   You should have received a copy of the GNU General Public License and
   a copy of the GCC Runtime Library Exception along with this program;
-  see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
-  <http://www.gnu.org/licenses/>.
-*/
+  If not, see the NOTICE.txt and NOTICE_RUNTIME.txt files for copies the 
+  libstdc++ and GCC Runtime licenses, or write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+  <Alternatively go to -> http://www.gnu.org/licenses/>
+
+
+      99% of this code is not originally mine. These meta-functions are mostly either copies of the current implementation, 
+      copies of an old implementation(C++11-14), or re-implementations of the original Libstdc++ library source code. 
+      All of this code is thus also copyrighted by Free Software Foundation, Inc. under the GPLv3(GNU General Public License) open source license.
+      All files containing this boilerplate include code from the C++ standard template library.
+      For the full libstdc++ license please read the NOTICE file or go to the link at the bottom of this boilerplate.
+*/ 
 /*
-  Copyright (C) 2024 Andrey Stroitelev <email=andrey.stroitelev3301@gmail.com> (URL=NA)
+  Copyright (C) 2024 Andrey Stroitelev <email=andrey.stroitelev3301@gmail.com> (URL=https://github.com/andreystroit3301)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
