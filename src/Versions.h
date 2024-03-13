@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2024 Andrey Stroitelev <email=andrey.stroitelev3301@gmail.com> (URL=https://github.com/andreystroit3301)
+  Copyright (C) 2024 Andrey Stroitelev <email=andrey.stroitelev3301@gmail.com> (URL=NA)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -38,12 +38,14 @@
 #define _DATA_STRUCTURE_LIB__VERSIONS_ 202403L // last update to this file
 
 
-// Start of feature version macros:
-#define _DATA_STRUCTURE_LIB_VERSION_         0x010000
+// Example of how version numbers are written: 0x01040A == 0x01(V1) -> 04(.4) -> 0A(.10) == V1.4.10
+
+// Start of feature version macros: (6-digit hexadecimal)
+#define _DATA_STRUCTURE_LIB_VERSION_         0x010000 
 #define _DATA_STRUCTURE_UTIL_LIB_VERSION_    0x010000
 #define _ARDUINO_UTIL_VERSION_               0x010000
 #define _DLIB_UTILITY_VERSION_               0x010000
-#define _TYPE_TRAITS_VERSION_                0x010000 // 0x 01(V1) 01(.1) 00(.0) == (V1.1.0)
+#define _TYPE_TRAITS_VERSION_                0x010000 
 #define _INITIALIZER_LIST_VERSION_           0x010000
 #define _ITERATOR_TRATIS_VERSION_            0x010000
 #define _DLIB_ITERATOR_VERSION_              0x010000
@@ -51,9 +53,10 @@
 // End of feature version Macros
 
 
-// Start of feature release date macros:
-#define _DATA_STRUCTURE_LIB__FULL_             202402L // no full release yet
-#define _DATA_STRUCTURE_LIB__UTIL_LIB_         202402L // no full release yet
+// Start of feature release date macros: (integer long value)
+// NOTE: These are all arbitrary and will all be updated to whatever date I make the first release of this library
+#define _DATA_STRUCTURE_LIB__FULL_             202402L
+#define _DATA_STRUCTURE_LIB__UTIL_LIB_         202402L
 #define _ARDUINO_UTIL_VERSION_                 202403L
 #define _DATA_STRUCTURE_LIB__UTILITY_          202402L
 #define _DATA_STRUCTURE_LIB__TYPE_TRAITS_      202402L
