@@ -1,6 +1,6 @@
 # Arduino_Data_Structure_Lib
 
-- INCOMPLETE/WIP
+- STATUS: INCOMPLETE/WIP -- No release yet
 
 This is a library for the Arduino IDE(V2+) that adds a bunch of templated data structures, functions, and meta-functions from libstdc++ which are not natively available/supported for AVR boards on the Arduino IDE.
 
@@ -81,6 +81,7 @@ still a bother I may add a seperate version that replaces all of the helper vari
 - [ ] Need to add global iterator functions/algorithms
 - [ ] Need to add container utility functions/algorithms with their respective specializations
 - [ ] Need to add arduino utility functions for faster IO read/write
+- [ ] I will try to make util/Utility.hpp and util/Type_Traits.hpp usable seperately (not sure if I can. Currently these files need to be used together to work properly)
 - [ ] Possibly will add internal comparator control functions
 - [ ] Need to add register/port control functions for abstraction
 - [ ] Possibly will add functions for faster pinMode _(if possible)_
