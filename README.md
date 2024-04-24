@@ -1,8 +1,14 @@
 # Arduino_Data_Structure_Lib
 
 - STATUS: INCOMPLETE/WIP -- No release yet
+  -Note: I have rewritten a big portion of the files that are currently in the repo, and I made a bunch of new files.
+         I have made alot of big changes and made alot of progress overall, but I'm not updating the repository just yet as I need to finish a file and re-organize the file structure before doing so.
+         Changing the file structure in github later will be alot more difficult. I started the data structures, and I currently have std::pair, std::array, std::tuple, and
+         std::initializer_list(if you would even consider this a data structure). I'm in the process of making std::vector, so I will update the repo after finishing std::vector and it's associated files.
 
-This is a library for the Arduino IDE(V2+) that adds a bunch of templated data structures, functions, and meta-functions from libstdc++ which are not natively available/supported for AVR boards on the Arduino IDE.
+This is a library for the Arduino IDE(V2+) that adds a bunch of templated data structures, functions, and meta-functions from libstdc++(c++ STL) which are not natively available/supported for AVR boards on the 
+Arduino IDE. Most of this code is copied from various versions of GCC libstdc++, but primarily I used gcc-4.9.0 implementations. The purpose of this library is to just take the parts of c++ STL that are needed 
+for the container classes along with the actual container classes and putting it all into a simple arduino library for AVR board users to use. Along with the data structures I'm implementing, I am also implementing the STL allocator, iterator, type traits, and a few general utilities and algorithms to go along with the data structure like std::swap, std::begin, and std::lexicographical_compare.
 
 This library was developed in Arduino IDE V2.3, so any users should have Arduino IDE V2.3 or newer to make sure the library works properly.
 
