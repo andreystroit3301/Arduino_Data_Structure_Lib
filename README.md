@@ -1,7 +1,7 @@
 # Arduino_Data_Structure_Lib
 
 - STATUS: INCOMPLETE/WIP -- No release yet
-  -Note: I have rewritten a big portion of the files that are currently in the repo, and I made a bunch of new files.
+   - Note: I have rewritten a big portion of the files that are currently in the repo, and I made a bunch of new files.
          I have made alot of big changes and made alot of progress overall, but I'm not updating the repository just yet as I need to finish a file and re-organize the file structure before doing so.
          Changing the file structure in github later will be alot more difficult. I started the data structures, and I currently have std::pair, std::array, std::tuple, and
          std::initializer_list(if you would even consider this a data structure). I'm in the process of making std::vector, so I will update the repo after finishing std::vector and it's associated files.
