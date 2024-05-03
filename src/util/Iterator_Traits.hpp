@@ -5,7 +5,226 @@
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
 
+      http://www.apache.org/licenses/LICENSE-2.0// Libstdc++ and GCC GNU Lincese boilerplate:      (this is required since this code is copyrighted under the GCC compiler. I did not design this myself.)
+/*
+  Partial Modified Implementation Of Meta-Functions from the <bits/stl_iterator_base_types> Libstdc++ header  -*- C++ -*-
+
+  Copyright (C) 1997-2024 Free Software Foundation, Inc.
+
+  This file is copying, modifying, and referenceing the GNU ISO C++ Library. 
+  This library is free software; you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the
+  Free Software Foundation; either version 3, or (at your option)
+  any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  Under Section 7 of GPL version 3, you are granted additional
+  permissions described in the GCC Runtime Library Exception, version
+  3.1, as published by the Free Software Foundation.
+
+  You should have received a copy of the GNU General Public License and
+  a copy of the GCC Runtime Library Exception along with this program;
+  If not, see the NOTICE.txt and NOTICE_RUNTIME.txt files for copies the 
+  libstdc++ and GCC Runtime licenses, or write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+  <Alternatively go to -> http://www.gnu.org/licenses/>
+
+
+      99% of this code is not originally mine. These meta-functions are mostly either copies of the current implementation, 
+      copies of an old implementation(C++11-14), or re-implementations of the original Libstdc++ library source code. 
+      All of this code is thus also copyrighted by Free Software Foundation, Inc. under the GPLv3(GNU General Public License) open source license.
+      All files containing this boilerplate include code from the C++ standard template library.
+      For the full libstdc++ license please read the NOTICE file or go to the link at the bottom of this boilerplate.
+*/ 
+/*
+  Copyright (C) 2024 Andrey Stroitelev <email=andrey.stroitelev3301@gmail.com> (URL=https://github.com/andreystroit3301)
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+/*
+  Iterator_Traits.hpp  [V1.0.0]  (template file to define common iterator traits)
+    By: Andrey Stroitelev
+
+  ~This file defines common iterator traits that all iterators use.
+  ~This will give a type alias for each significant type relating to iterators to make using them in algorithms easier.
+  ~This is based off the current STL iterator_traits header and the c++14 stl_iterator_base_types header.
+*/
+
+
+// Start of Iterator_Traits.hpp
+#ifndef _ITERATOR_TRAITS_HPP_
+#define _ITERATOR_TRAITS_HPP_
+
+#ifndef _ITERATOR_TRAITS_VERSION_
+#define _ITERATOR_TRAITS_VERSION_ 0x010000
+#endif
+
+
+#include <Arduino.h>
+#include "Config.h"
+#include "Type_Traits.hpp"
+
+
+_DLIB_HEADER
+
+
+// Start of iterator trait implementations:
+namespace std _DLIB_VISIBILITY {
+
+  // Start of iterator category tags:
+  struct legacy_iterator_tag { };
+
+  struct output_iterator_tag : public legacy_iterator_tag { };
+
+  struct input_iterator_tag : public legacy_iterator_tag { };
+
+  struct forward_iterator_tag : public input_iterator_tag { };
+
+  struct bidirectional_iterator_tag : public forward_iterator_tag { };
+
+  struct random_access_iterator_tag : public bidirectional_iterator_tag { };
+
+  struct contiguous_iterator_tag : public random_access_iterator_tag { };
+
+  struct single_pass_tag { };
+  struct multi_pass_tag { };
+  // End of iterator category tags
+
+
+  // Start of iterator base class and iterator_traits implementations:
+  template<class _Category, class _Tp,
+           class _Distance = ptrdiff_t,
+           class _Pointer = _Tp*,
+           class _Reference = _Tp&>
+  struct iterator {
+    typedef _Category iterator_category;
+    typedef _Tp value_type;
+    typedef _Distance difference_type;
+    typedef _Pointer pointer;
+    typedef _Reference reference;
+  };
+  // I will eventually change this implementation to just use __iterator_traits in the __detail:: namespace
+  /* // i need to delete this
+  template<class _Category, class _Tp, class _Distance = ptrdiff_t, class _Pointer = _Tp*, class _Reference = _Tp&>
+  struct _iterator {
+    using value_type = _Tp;
+    using difference_type = _Distance;
+    using pointer_type = _Pointer;
+    using reference_type = _Reference;
+    using iterator_category = _Category;
+  };
+
+  template<class _Iter>
+  struct iterator_traits : public _iterator<typename _Iter::iterator_category,
+                                            typename _Iter::value_type,
+                                            typename _Iter::difference_type,
+                                            typename _Iter::pointer_type,
+                                            typename _Iter::reference_type> { };
+  
+  template<class _Tp>
+  struct iterator_traits<_Tp*> : public _iterator<random_access_iterator_tag, _Tp> { };
+
+  template<class _Tp>
+  struct iterator_traits<const _Tp*> : public _iterator<random_access_iterator_tag,
+                                                        _Tp, ptrdiff_t, const _Tp*, const _Tp&> { };
+  */
+
+  namespace __detail { // namespace for internal implementation
+
+    _GLIBCXX_HAS_NESTED_TYPE(iterator_category)
+
+    template<class _Iter, bool = __has_iterator_category<_Iter>::value>
+    struct __iterator_traits { };
+
+    template<class _Iter>
+    struct __iterator_traits<_Iter, true> {
+      typedef typename _Iter::iterator_category iterator_category;
+      typedef typename _Iter::value_type value_type;
+      typedef typename _Iter::difference_type difference_type;
+      typedef typename _Iter::pointer pointer;
+      typedef typename _Iter::reference reference;
+    };
+
+  } // end of __detail:: namespace
+
+  template<class _Iterator>
+  struct iterator_traits : public __detail::__iterator_traits<_Iterator> { };
+
+  template<class _Tp>
+  struct iterator_traits<_Tp*> {
+    typedef random_access_iterator_tag iterator_category;
+    typedef _Tp value_type;
+    typedef ptrdiff_t difference_type;
+    typedef _Tp* pointer;
+    typedef _Tp& reference;
+  };
+
+  template<class _Tp>
+  struct iterator_traits<const _Tp*> {
+    typedef random_access_iterator_tag iterator_category;
+    typedef _Tp value_type;
+    typedef ptrdiff_t difference_type;
+    typedef const _Tp* pointer;
+    typedef const _Tp& reference;
+  };
+
+  namespace __detail { // namespace for internal function implementation
+
+    template<class _Iter>
+    constexpr typename iterator_traits<_Iter>::iterator_category
+    __iterator_category(const _Iter&) {
+      return typename iterator_traits<_Iter>::iterator_category();
+    }
+
+  } // end of __detail:: namespace
+  // End of iterator base class and iterator_traits
+
+
+
+  // ~*~*~*~ Start of stl_iterator_base_types.h (from libstdc++) implementation: ~*~*~*~
+  namespace __detail { // namespace for internal implementations
+
+    // Start of _Iter_base implementation:
+    template<class _Iterator, bool _HasBase>
+    struct _Iter_base {
+      using iterator_type = _Iterator;
+      static iterator_type _S_base(_Iterator __it) { return __it; }
+    };
+
+    template<class _Iterator>
+    struct _Iter_base<_Iterator, true> {
+      using iterator_type = typename _Iterator::iterator_type;
+      static iterator_type _S_base(_Iterator __it) { return __it.base(); }
+    };
+    // End of _Iter_base
+
+    // Start of _RequireInputIter implementation:
+    template<class _InIter>
+    using _RequireInputIter = typename enable_if<is_convertible<typename iterator_traits<_InIter>::iterator_category,
+                                                                input_iterator_tag>::value>::type;
+    // End of _RequireInputIter
+
+  } // end of __detail:: namespace
+  // ~*~*~*~ End of stl_iterator_base_types.h (from libstdc++) impl ~*~*~*~
+
+} // end of std:: namespace
+
+
+#endif // end of Iterator_Traits.hpp
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
