@@ -14,7 +14,7 @@
   limitations under the License.
 */
 /*
-  ArduinoUtil.h [V1.0.0]  (Utility function header file)
+  ArduinoUtil.h [V1.0.0]  (Arduino Utility function header file)
     By: Andrey Stroitelev
 
   ArduinoUtil Description:
@@ -31,6 +31,17 @@
   ArduinoUtil Uses:
     ~
 */
+/*
+  TO DO:
+    *Add functions for faster digital read/write
+    *Add optimized pinmode functions
+    *possibly add internal comparator control functions
+    *add register/port control functions
+    *possibly add optimized interrupt control functions
+    *add helper functions for register/port pin designations
+    *add macros/functions to simplify defining/initializing variables in program memory, and functions to simplify using them.
+      ~They will still be const
+*/
 
 
 // Start of ArduinoUtil.h
@@ -38,11 +49,12 @@
 #define _ARDUINO_UTIL_H_
 
 #ifndef _ARDUINO_UTIL_VERSION_
-#define _ARDUINO_UTIL_VERSION_ 0x010000
+#define _ARDUINO_UTIL_VERSION_ 0x010000 // V1.0.0
 #endif
 
 
 #include <Arduino.h>
+#include "Config.h"
 
 
 // Start of externally defined variables: (required to be in global scope to work)
@@ -55,7 +67,7 @@ extern char *__brkval;
 
 
 // Start of util:: namespace
-namespace util {
+namespace util _DLIB_VISIBILITY {
 
   // Start of freeMemory() declarations:
   extern int freeMemory(void);
