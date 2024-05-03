@@ -25,13 +25,37 @@
   libstdc++ and GCC Runtime licenses, or write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
   <Alternatively go to -> http://www.gnu.org/licenses/>
+*/
+/*
+  Copyright (c) 1994
+  Hewlett-Packard Company
+
+  Permission to use, copy, modify, distribute and sell this software
+  and its documentation for any purpose is hereby granted without fee,
+  provided that the above copyright notice appear in all copies and
+  that both that copyright notice and this permission notice appear
+  in supporting documentation.  Hewlett-Packard Company makes no
+  representations about the suitability of this software for any
+  purpose.  It is provided "as is" without express or implied warranty.
 
 
-      99% of this code is not originally mine. These meta-functions are mostly either copies of the current implementation, 
-      copies of an old implementation(C++11-14), or re-implementations of the original Libstdc++ library source code. 
-      All of this code is thus also copyrighted by Free Software Foundation, Inc. under the GPLv3(GNU General Public License) open source license.
-      All files containing this boilerplate include code from the C++ standard template library.
-      For the full libstdc++ license please read the NOTICE file or go to the link at the bottom of this boilerplate.
+  Copyright (c) 1996,1997
+  Silicon Graphics Computer Systems, Inc.
+
+  Permission to use, copy, modify, distribute and sell this software
+  and its documentation for any purpose is hereby granted without fee,
+  provided that the above copyright notice appear in all copies and
+  that both that copyright notice and this permission notice appear
+  in supporting documentation.  Silicon Graphics makes no
+  representations about the suitability of this software for any
+  purpose.  It is provided "as is" without express or implied warranty.
+*/
+/*
+  99% of this code is not originally mine. These meta-functions are mostly either copies of the current implementation, 
+  copies of an old implementation(C++11-14), or re-implementations of the original Libstdc++ library source code. 
+  All of this code is thus also copyrighted by Free Software Foundation, Inc. under the GPLv3(GNU General Public License) open source license.
+  All files containing this boilerplate include code from the C++ standard template library.
+  For the full libstdc++ license please read the NOTICE file or go to the link at the bottom of this boilerplate.
 */ 
 /*
   Copyright (C) 2024 Andrey Stroitelev <email=andrey.stroitelev3301@gmail.com> (URL=https://github.com/andreystroit3301)
@@ -49,855 +73,990 @@
   limitations under the License.
 */
 /*
-  Utility.hpp [V1.0.0] (template class header/declaration file)
+  Utility.hpp  [V1.0.0]  (template header file for general utilities)
     By: Andrey Stroitelev
 
-  ~This file adds a bunch of utility functions from the std namespace(libstdc++) that arent available for AVR boards on the arduino IDE
-  ~This file was mainly added out of necessity for the implementations of the data structure classes in this library.
-  ~This file also adds the std::move() function which allows you to do move semantics in the arduino IDE which are also not normally supported in the arduino IDE
-    *You can use r-value references(&&), but it ends up being no different than just using regular references(&) if you don't use std::move()
-  ~Some meta-functions that should be in Type_Traits.hpp are in this file instead such as is_enum, is_union, is_class, and is_base_of along with a bunch of other metafunctions.
-   I have done this to try to lower the amount of code in type traits by dividing up the functions, and there are some functions in this file that make more sense here but they need a function from Type_Traits.hpp to functions.
-    *Since I want this file(Utility.hpp) and Type_Traits.hpp to work properly when used on their own without the other file preset. 
-  ~The meta-functions in this file are mainly functions that help with making other meta-functions, and they just help with using templates in general.
-
-  ~I also added a simple function called freeMemory() which calculates the amount of free memory the arduino has left.
-    *This function just calculates the distance between the end of the stack and the end of the heap, so it may not detect dynamic memory that was deallocated.
+  ~This file is not a copy of the libstdc++ utility header as that is implemented in the UtilityBase.hpp file.
+  ~This header consolidates some miscalaneous headers that are essential, but I couldn't think of another file to put them in.
+  ~This file contains the implementations of the bits/refwrap, functional, bits/stl_uninitialized, and bits/stl_construct headers from libstdc++.
 */
 
 
 // Start of Utility.hpp
-#ifndef _DLIB_UTILITY_HPP_ 
-#define _DLIB_UTILITY_HPP_ // adding DLIB to the start of the macro alias to avoid possible conflict since UTILITY_HPP seems common
+#ifndef _DLIB_UTILITY_HPP_
+#define _DLIB_UTILITY_HPP_
 
 #ifndef _DLIB_UTILITY_VERSION_
 #define _DLIB_UTILITY_VERSION_ 0x010000
 #endif
 
 
-#include <Arduino.h> // including all of the std c++ stuff from the arduino core
+#include <Arduino.h>
+#include "Config.h"
+#include "UtilityBase.hpp"
+#include "Invoke.hpp"
+#include "Move.hpp"
+#include "Alloc_Traits.hpp"
+#include "Allocator.hpp"
 
 
-// Start of std:: namespace:
-namespace std {
+_DLIB_HEADER
+
 
-  template<class...>
-  using void_t = void; // simple utility for templates
+// Start of implementations from the bits/refwrap header in libstdc++:
+
+namespace std _DLIB_VISIBILITY {
 
-  
-  // Start of __type_identity implementation: (used internally)
-  template<class _Type>
-  struct __type_identity { using type = _Type; };
+  namespace __detail { // namespace for internal implementations
+
+    template<class _Res, class... _ArgTypes>
+    struct _Maybe_unary_or_binary_function { };
 
-  template<class _Tp>
-  using __type_identity_t = typename __type_identity<_Tp>::type;
-  // End of __type_identity implementation
+_USE_DEPRECATED
 
+    template<class _Res, class _T1>
+    struct _Maybe_unary_or_binary_function<_Res, _T1>
+      : public unary_function<_T1, _Res> { };
 
-  // Start of integral_constant implementation:
-  template<class T, T val>
-  struct integral_constant {
-    static constexpr T value = val;
+    template<class _Res, class _T1, class _T2>
+    struct _Maybe_unary_or_binary_function<_Res, _T1, _T2>
+      : public binary_function<_T1, _T2, _Res> { };
 
-    using value_type = T;
-    using type = integral_constant;
+_END_DEPRECATED
 
-    constexpr operator value_type() const noexcept { return value; }
-    constexpr value_type operator()() const noexcept { return value; }
-  };
+    template<class _Signature>
+    struct _Mem_fn_traits;
 
-  template<bool B>
-  using bool_constant = integral_constant<bool, B>; // often used specialization for boolean constant
+    template<class _Res, class _Class, class... _ArgTypes>
+    struct _Mem_fn_traits_base {
+      using __result_type = _Res;
+      using __maybe_type = _Maybe_unary_or_binary_function<_Res, _Class*, _ArgTypes...>;
+      using __arity = integral_constant<size_t, sizeof...(_ArgTypes)>;
+    };
 
-  using true_type = bool_constant<true>;
-  using false_type = bool_constant<false>;
-  // End of integral_constant implementation
+#   define _GLIBCXX_MEM_FN_TRAITS2(_CV, _REF, _LVAL, _RVAL)            \
+    template<class _Res, class _Class, class... _ArgTypes>             \
+    struct _Mem_fn_traits<_Res (_Class::*)(_ArgTypes...) _CV _REF>     \
+    : public _Mem_fn_traits_base<_Res, _CV _Class, _ArgTypes...> {     \
+      using __vararg = false_type;                                     \
+    };                                                                 \
+    template<class _Res, class _Class, class... _ArgTypes>             \
+    struct _Mem_fn_traits<_Res (_Class::*)(_ArgTypes... ...) _CV _REF> \
+    : public _Mem_fn_traits_base<_Res, _CV _Class, _ArgTypes...> {     \
+      using __vararg = true_type;                                      \
+    };
 
+#   define _GLIBCXX_MEM_FN_TRAITS(_REF, _LVAL, _RVAL) \
+    _GLIBCXX_MEM_FN_TRAITS2(              , _REF, _LVAL, _RVAL) \
+    _GLIBCXX_MEM_FN_TRAITS2(const         , _REF, _LVAL, _RVAL) \
+    _GLIBCXX_MEM_FN_TRAITS2(volatile      , _REF, _LVAL, _RVAL) \
+    _GLIBCXX_MEM_FN_TRAITS2(const volatile, _REF, _LVAL, _RVAL)
 
-  // Start of conditional implementation:
-  template<bool _B, class _Tp, class _F>
-  struct conditional { using type = _Tp; };
+    _GLIBCXX_MEM_FN_TRAITS(, true_type, true_type)
+    _GLIBCXX_MEM_FN_TRAITS(&, true_type, false_type)
+    _GLIBCXX_MEM_FN_TRAITS(&&, false_type, true_type)
 
-  template<class _Tp, class _F>
-  struct conditional<false, _Tp, _F> { using type = _F; };
+#   undef _GLIBCXX_MEM_FN_TRAITS
+#   undef _GLIBCXX_MEM_FN_TRAITS2
 
-  template<bool _B, class _Tp, class _F>
-  using conditional_t = typename conditional<_B, _Tp, _F>::type;
-  // End of conditional implementation
+#   define _NOEXCEPT_PARM //, bool _NE
+#   define _NOEXCEPT_QUAL //noexcept(_NE)
 
+    template<class _Functor, class = void_t<>>
+    struct _Maybe_get_result_type { };
 
-  // Start of helper conditional meta-function implementations:
-  template<class...>
-  struct __or_;
+    template<class _Functor>
+    struct _Maybe_get_result_type<_Functor, void_t<typename _Functor::result_type>> {
+      typedef typename _Functor::result_type result_type;
+    };
 
-  template<>
-  struct __or_<> : public false_type { };
+    template<class _Functor>
+    struct _Weak_result_type_impl 
+      : public _Maybe_get_result_type<_Functor> { };
 
-  template<class _B1>
-  struct __or_<_B1> : public _B1 { };
+    template<class _Res, class... _ArgTypes _NOEXCEPT_PARM>
+    struct _Weak_result_type_impl<_Res(_ArgTypes...) _NOEXCEPT_QUAL> {
+      typedef _Res result_type;
+    };
 
-  template<class _B1, class _B2>
-  struct __or_<_B1, _B2> : public conditional<_B1::value, _B1, _B2>::type { };
+    template<class _Res, class... _ArgTypes _NOEXCEPT_PARM>
+    struct _Weak_result_type_impl<_Res(_ArgTypes......) _NOEXCEPT_QUAL> {
+      typedef _Res result_type;
+    };
 
-  template<class _B1, class _B2, class _B3, class... _Bn>
-  struct __or_<_B1, _B2, _B3, _Bn...> : public conditional<_B1::value, _B1, __or_<_B2, _B3, _Bn...>>::type { };
+    template<class _Res, class... _ArgTypes _NOEXCEPT_PARM>
+    struct _Weak_result_type_impl<_Res(*)(_ArgTypes...) _NOEXCEPT_QUAL> {
+      typedef _Res result_type;
+    };
 
-  template<class...>
-  struct __and_ { };
+    template<class _Res, class... _ArgTypes _NOEXCEPT_PARM>
+    struct _Weak_result_type_impl<_Res(*)(_ArgTypes......) _NOEXCEPT_QUAL> {
+      typedef _Res result_type;
+    };
 
-  template<>
-  struct __and_<> : public true_type { };
+    template<class _Functor, bool = is_member_function_pointer<_Functor>::value>
+    struct _Weak_result_type_memfun : public _Weak_result_type_impl<_Functor> { };
 
-  template<class _B1>
-  struct __and_<_B1> : public _B1 { };
+    template<class _MemFunPtr>
+    struct _Weak_result_type_memfun<_MemFunPtr, true> {
+      using result_type = typename _Mem_fn_traits<_MemFunPtr>::__result_type;
+    };
 
-  template<class _B1, class _B2>
-  struct __and_<_B1, _B2> : public conditional<_B1::value, _B2, _B1>::type { };
+    template<class _Func, class _Class>
+    struct _Weak_result_type_memfun<_Func _Class::*, false> { };
 
-  template<class _B1, class _B2, class _B3, class... _Bn>
-  struct __and_<_B1, _B2, _B3, _Bn...> : public conditional<_B1::value, __and_<_B2, _B3, _Bn...>, _B1>::type { };
+    template<class _Functor>
+    struct _Weak_result_type
+      : public _Weak_result_type_memfun<typename remove_cv<_Functor>::type> { };
 
-  template<class _Pp>
-  struct __not_ : public bool_constant<!_Pp::value> { };
-  // End of helper conditional meta-function implementations
+    template<class _Tp, class = void_t<>>
+    struct _Refwrap_base_arg1 { };
 
-
-  // Start of __sfinae_types internal utility implementation:
-  struct __sfinae_types {
-    typedef char __one;
-    typedef struct { char __arr[2]; } __two;
-  };
-  // End of __sfinae_types implementation
-
-
-  // Start of is_same implementation:
-  template<class _Tp, class _Up>
-  struct is_same : public false_type { };
-
-  template<class _Tp>
-  struct is_same<_Tp, _Tp> : public true_type { };
-
-  template<class _Tp, class _Up>
-  inline constexpr bool is_same_v = is_same<_Tp, _Up>::value;
-  // End of is_same implementation
-
-
-  // Start of same_as implementation:
-  // implementing as a meta-function since there are no concepts in c++11
-  template<class _Tp, class _Up>
-  inline constexpr bool same_as = (is_same_v<_Tp, _Up> && is_same_v<_Up, _Tp>);
-  // End of same_as implementation
-
-
-  // Start of is_void pre-declaration:
-  template<class>
-  struct is_void;
-  // End of is_void pre-declaration
-
-
-  // Start of is_function implementation:
-  template<class>
-  struct is_function : public false_type { };
-
-  // start of Standard function checks
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...)> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......)> : public true_type { };
-  // end of standard function checks
-
-  // start of cv-qualified function checks
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) const> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) volatile> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) const volatile> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) const> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) volatile> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) const volatile> : public true_type { };
-  // End of cv-qualifed function checks
-
-  // Start of ref-qualified function checks
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) &> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) const &> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) volatile &> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) const volatile &> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) &> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) const &> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) volatile &> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) const volatile &> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) &&> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) const &&> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) volatile &&> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args...) const volatile &&> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) &&> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) const &&> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) volatile &&> : public true_type { };
-
-  template<class _Ret, class... _Args>
-  struct is_function<_Ret(_Args......) const volatile &&> : public true_type { };
-  // End of ref-qualified function checks
-  // End of is_function implementation
-
-
-  // Start of is_reference implementation:
-  template<class T>
-  struct is_reference : public false_type { };
-
-  template<class T>
-  struct is_reference<T&> : public true_type { };
-
-  template<class T>
-  struct is_reference<T&&> : public true_type { };
-
-  template<class T>
-  inline constexpr bool is_reference_v = is_reference<T>::value;
-  // End of is_reference implementation
-
-
-  // Start of extent and remove_all_extents implementation:
-  template<class, unsigned = 0>
-  struct extent;
-
-  template<class>
-  struct remove_all_extents;
-
-  template<class, unsigned _Uint>
-  struct extent : public integral_constant<size_t, 0> { };
-
-  template<class _Tp, unsigned _Uint, size_t _Size>
-  struct extent<_Tp[_Size], _Uint> : public integral_constant<size_t, _Uint == 0 ? _Size : extent<_Tp, _Uint - 1>::value> { };
-
-  template<class _Tp, unsigned _Uint>
-  struct extent<_Tp[], _Uint> : public integral_constant<size_t, _Uint == 0 ? 0 : extent<_Tp, _Uint - 1>::value> { };
-
-  template<class _Tp>
-  struct remove_extent { typedef _Tp type; };
-
-  template<class _Tp, size_t _Size>
-  struct remove_extent<_Tp[_Size]> { typedef _Tp type; };
-
-  template<class _Tp>
-  struct remove_extent<_Tp[]> { typedef _Tp type; };
-
-  template<class _Tp>
-  struct remove_all_extents { typedef _Tp type; };
-
-  template<class _Tp, size_t _Size>
-  struct remove_all_extents<_Tp[_Size]> {
-    typedef typename remove_all_extents<_Tp>::type type;
-  };
-
-  template<class _Tp>
-  struct remove_all_extents<_Tp[]> {
-    typedef typename remove_all_extents<_Tp>::type type;
-  };
-
-  template<class _Tp>
-  using remove_extent_t = typename remove_extent<_Tp>::type;
-
-  template<class _Tp>
-  using remove_all_extents_t = typename remove_all_extents<_Tp>::type;
-  // End of extend and remove_all_extends implementation
-
-
-  // Start of is_array type checker implementation:
-  template<class _Tp>
-  struct is_array : public false_type { };
-
-  template<class _Tp>
-  struct is_array<_Tp[]> : public true_type { };
-
-  template<class _Tp, size_t N>
-  struct is_array<_Tp[N]> : public true_type { };
-
-  template<class _Tp>
-  inline constexpr bool is_array_v = is_array<_Tp>::value;
-
-  template<class _Tp>
-  struct is_array_known_bounds : public bool_constant<(extent<_Tp>::value > 0)> { };
-
-  template<class _Tp>
-  struct is_array_unknown_bounds : public __and_<is_array<_Tp>, __not_<extent<_Tp>>>::type { };
-  // End of is_array implementation
-
-
-  // Start of __is_complete_or_unbounded implementation:
-  template<class _Tp, size_t = sizeof(_Tp)>
-  constexpr true_type __is_complete_or_unbounded(__type_identity<_Tp>) { return {}; }
-  
-  template<class _TypeIdentity, class _NestedType = typename _TypeIdentity::type>
-  constexpr typename __or_<
-                    is_reference<_NestedType>,
-                    is_function<_NestedType>,
-                    is_void<_NestedType>,
-                    is_array_unknown_bounds<_NestedType>
-                    >::type __is_complete_or_unbounded(_TypeIdentity) { return {}; }
-  // End of __is_complete_or_unbounded implementation
-
-
-  // Start of qualifier removal helpers(remove_cv, remove_const, and remove_volatile):
-  template<class T> 
-  struct remove_cv { typedef T type; };
-  template<class T> 
-  struct remove_cv<const T> { typedef T type; };
-  template<class T> 
-  struct remove_cv<volatile T> { typedef T type; };
-  template<class T> 
-  struct remove_cv<const volatile T> { typedef T type; };
-
-  template<class T> 
-  struct remove_const { typedef T type; };
-  template<class T> 
-  struct remove_const<const T> { typedef T type; };
-
-  template<class T> 
-  struct remove_volatile { typedef T type; };
-  template<class T> 
-  struct remove_volatile<volatile T> { typedef T type; };
-
-  template<class T>
-  using remove_cv_t = typename remove_cv<T>::type;
-  template<class T>
-  using remove_const_t = typename remove_const<T>::type;
-  template<class T>
-  using remove_volatile_t = typename remove_volatile<T>::type;
-  // End of qualifier removal helper implementation(remove_cv, remove_const, and remove_volatile)
-
-
-  // Start of qualifier adding(add_cv, add_const, and add_volatile) meta-function implementation:
-  template<class T>
-  struct add_cv { typedef const volatile T type; };
-
-  template<class T>
-  struct add_const { typedef const T type; };
-
-  template<class T>
-  struct add_volatile { typedef volatile T type; };
-
-  template<class T>
-  using add_cv_t = typename add_cv<T>::type;
-
-  template<class T>
-  using add_const_t = typename add_const<T>::type;
-
-  template<class T>
-  using add_volatile_t = typename add_volatile<T>::type;
-  // End of add_cv, add_const, and add_volatile implementation
-
-
-  // Start of qualifier check meta-function implementations:
-  template<class T>
-  struct is_const : public false_type { };
-
-  template<class T>
-  struct is_const<const T> : public true_type { };
-
-  template<class T>
-  inline constexpr bool is_const_v = is_const<T>::value;
-
-  template<class T>
-  struct is_volatile : public false_type { };
-
-  template<class T>
-  struct is_volatile<volatile T> : public true_type { };
-
-  template<class T>
-  inline constexpr bool is_volatile_v = is_volatile<T>::value;
-
-  template<class T>
-  struct is_cv : public false_type { };
-
-  template<class T>
-  struct is_cv<const volatile T> : public true_type { };
-
-  template<class T>
-  struct is_cv<const T> : public true_type { };
-
-  template<class T>
-  struct is_cv<volatile T> : public true_type { };
-
-  template<class T>
-  inline constexpr bool is_cv_v = is_cv<T>::value;
-  // End of qualifier check meta-function implementations
-
-
-  // Start of is_void implementation:
-  template<class _Tp>
-  struct is_void : public false_type { };
-
-  template<>
-  struct is_void<void> : public true_type { };
-
-  template<>
-  struct is_void<const void> : public true_type { };
-
-  template<>
-  struct is_void<volatile void> : public true_type { };
-
-  template<>
-  struct is_void<const volatile void> : public true_type { };
-  // End of is_void implementation
-
-
-  // Start of is_enum type checker implementation: (uses GCC(>=V4.3) compiler intrinsics available in the Arduino IDE)
-  template<class _Tp>
-  struct is_enum : public bool_constant<__is_enum(_Tp)> { };
-
-  template<class _Tp>
-  inline constexpr bool is_enum_v = is_enum<_Tp>::value;
-  // End of is_enum implementation
-
-
-  // Start of is_union type checker implementation: (uses GCC(>=V4.3) compiler intrinsics available in the Arduino IDE)
-  template<class _Tp>
-  struct is_union : public bool_constant<__is_union(_Tp)> { }; // uses GCC compiler intrinsics to detect if a passed type is a union or not
-
-  template<class _Tp>
-  inline constexpr bool is_union_v = is_union<_Tp>::value;
-  // End of is_union implementation
-
-
-  // Start of is_class type checker implementation:
-  namespace _is_class_ {
     template<class _Tp>
-    bool_constant<!is_union<_Tp>::value> test(int _Tp::*);
+    struct _Refwrap_base_arg1<_Tp, void_t<typename _Tp::argument_type>> {
+      typedef typename _Tp::argument_type argument_type;
+    };
 
-    template<class>
-    false_type test(...);
-  }
-  
+    template<class _Tp, class = void_t<>>
+    struct _Refwrap_base_arg2 { };
+
+    template<class _Tp>
+    struct _Refwrap_base_arg2<_Tp, void_t<typename _Tp::first_argument_type,
+                                          typename _Tp::second_argument_type>> {
+      typedef typename _Tp::first_argument_type first_argument_type;
+      typedef typename _Tp::second_argument_type second_argument_type;
+    };
+
+    template<class _Tp>
+    struct _Reference_wrapper_base
+      : public _Weak_result_type<_Tp>,
+        public _Refwrap_base_arg1<_Tp>,
+        public _Refwrap_base_arg2<_Tp> { };
+
+_USE_DEPRECATED
+
+    template<class _Res, class _T1 _NOEXCEPT_PARM>
+    struct _Reference_wrapper_base<_Res(_T1) _NOEXCEPT_QUAL>
+      : public unary_function<_T1, _Res> { };
+
+    template<class _Res, class _T1>
+    struct _Reference_wrapper_base<_Res(_T1) const>
+      : public unary_function<_T1, _Res> { };
+
+    template<class _Res, class _T1>
+    struct _Reference_wrapper_base<_Res(_T1) volatile>
+      : public unary_function<_T1, _Res> { };
+
+    template<class _Res, class _T1>
+    struct _Reference_wrapper_base<_Res(_T1) const volatile>
+      : public unary_function<_T1, _Res> { };
+
+    template<class _Res, class _T1, class _T2 _NOEXCEPT_PARM>
+    struct _Reference_wrapper_base<_Res(_T1, _T2) _NOEXCEPT_QUAL>
+      : public binary_function<_T1, _T2, _Res> { };
+    
+    template<class _Res, class _T1, class _T2>
+    struct _Reference_wrapper_base<_Res(_T1, _T2) const>
+      : public binary_function<_T1, _T2, _Res> { };
+
+    template<class _Res, class _T1, class _T2>
+    struct _Reference_wrapper_base<_Res(_T1, _T2) volatile>
+      : public binary_function<_T1, _T2, _Res> { };
+
+    template<class _Res, class _T1, class _T2>
+    struct _Reference_wrapper_base<_Res(_T1, _T2) const volatile>
+      : public binary_function<_T1, _T2, _Res> { };
+
+    template<class _Res, class _T1 _NOEXCEPT_PARM>
+    struct _Reference_wrapper_base<_Res(*)(_T1) _NOEXCEPT_QUAL>
+      : public unary_function<_T1, _Res> { };
+    
+    template<class _Res, class _T1, class _T2 _NOEXCEPT_PARM>
+    struct _Reference_wrapper_base<_Res(*)(_T1, _T2) _NOEXCEPT_QUAL>
+      : public binary_function<_T1, _T2, _Res> { };
+
+    template<class _Tp, bool = is_member_function_pointer<_Tp>::value>
+    struct _Reference_wrapper_base_memfun
+      : public _Reference_wrapper_base<_Tp> { };
+
+    template<class _MemFunPtr>
+    struct _Reference_wrapper_base_memfun<_MemFunPtr, true>
+      : public _Mem_fn_traits<_MemFunPtr>::__maybe_type {
+      using result_type = typename _Mem_fn_traits<_MemFunPtr>::__result_type;
+    };
+
+_END_DEPRECATED
+
+  } // end of __detail:: namespace
+
+
   template<class _Tp>
-  struct is_class : decltype(_is_class_::test<_Tp>(nullptr)) { };
+  class reference_wrapper
+    : public __detail::_Reference_wrapper_base_memfun<typename remove_cv<_Tp>::type> {
+    _Tp* _M_data;
 
-  template<class _Tp>
-  inline constexpr bool is_class_v = is_class<_Tp>::value;
-  // End of is_class implementation
+    constexpr static _Tp* _S_fun(_Tp& __r) noexcept { return __detail::__addressof(__r); }
 
+    static void _S_fun(_Tp&&) = delete;
 
-  // Start of is_base_of class inheritance checker implementation:
-  namespace _is_base_of_ {
-    template<class _B>
-    true_type test_ptr_conv(const volatile _B*);
-    template<class>
-    false_type test_ptr_conv(const volatile void*);
+    template<class _Up, class _Up2 = remove_cvref_t<_Up>>
+    using __not_same = typename enable_if<!is_same<reference_wrapper, _Up2>::value>::type;
 
-    template<class _B, class _D>
-    auto test_is_base_of(int) -> decltype(test_ptr_conv<_B>(static_cast<_D*>(nullptr)));
-    template<class, class>
-    auto test_is_base_of(...) -> true_type;
-  }
-
-  template<class _Base, class _Derived>
-  struct is_base_of : public bool_constant<is_class<_Base>::value &&
-  is_class<_Derived>::value && decltype(_is_base_of_::test_is_base_of<_Base, _Derived>(0))::value> { };
-  
-  template<class _Base, class _Derived>
-  inline constexpr bool is_base_of_v = is_base_of<_Base, _Derived>::value;
-  // End of is_base_of implementation
-
-
-  // Start of qualifier matching meta-functions implementation:
-  namespace _cv_selector_helper { // start of helper namespace
-
-    template<class _Unqualified, bool _IsConst, bool _IsVol>
-    struct __cv_selector;
-
-    template<class _Unqualified>
-    struct __cv_selector<_Unqualified, false, false> {
-      typedef _Unqualified __type;
-    };
-
-    template<class _Unqualified>
-    struct __cv_selector<_Unqualified, false, true> {
-      typedef volatile _Unqualified __type;
-    };
-
-    template<class _Unqualified>
-    struct __cv_selector<_Unqualified, true, false> {
-      typedef const _Unqualified __type;
-    };
-
-    template<class _Unqualified>
-    struct __cv_selector<_Unqualified, true, true> {
-      typedef const volatile _Unqualified __type;
-    };
-
-  } // end of helper namespace
-
-  template<class _Qualified, class _Unqualified,
-           bool _IsConst = is_const<_Qualified>::value,
-           bool _IsVol = is_volatile<_Qualified>::value>
-  class match_cv_qualifiers {
-    typedef _cv_selector_helper::__cv_selector<_Unqualified, _IsConst, _IsVol> __match;
     public:
-      typedef typename __match::__type type;
-  };
+      typedef _Tp type;
 
-  template<class _Qualified, class _Unqualified,
-           bool _IsConst = is_const<_Qualified>::value,
-           bool _IsVol = is_volatile<_Qualified>::value>
-  using match_cv_qualifiers_t = typename match_cv_qualifiers<_Qualified, _Unqualified, _IsConst, _IsVol>::type;
-  // End of qualifier matching meta-functions implementation
+      template<class _Up, class = __not_same<_Up>,
+               class = decltype(reference_wrapper::_S_fun(declval<_Up>()))>
+      constexpr reference_wrapper(_Up&& __uref)
+      noexcept(noexcept(reference_wrapper::_S_fun(declval<_Up>())))
+        : _M_data(reference_wrapper::_S_fun(std::forward<_Up>(__uref))) { }
 
+      reference_wrapper(const reference_wrapper&) = default;
 
-  // Start of remove_refernce implementation:
-  template<class T>
-  struct remove_reference { typedef T type; };
+      reference_wrapper& operator=(const reference_wrapper&) = default;
 
-  template<class T>
-  struct remove_reference<T&> { typedef T type; };
+      constexpr operator _Tp&() const noexcept { return this->get(); }
 
-  template<class T>
-  struct remove_reference<T&&> { typedef T type; };
+      constexpr _Tp& get() const noexcept { return *_M_data; }
 
-  template<class T>
-  using remove_reference_t = typename remove_reference<T>::type; // Helper alias
-  // End of remove_reference implementation
+      template<class... _Args>
+      constexpr typename __detail::__invoke_result<_Tp&, _Args...>::type
+      operator()(_Args&&... __args) const noexcept(is_nothrow_invocable<_Tp&, _Args...>::value) {
+        return __detail::__invoke(get(), std::forward<_Args>(__args)...);
+      }
+  }; // end of reference_wrapper class
 
-
-  // Start of add_lvalue_reference and add_rvalue_reference implementation:
-  namespace _add_reference_ { // start of helper namespace
-    template<class T>
-    struct type_identity { using type = T; };
-
-    template<class T>
-    auto try_add_lvalue_reference(int) -> type_identity<T&>;
-    template<class T>
-    auto try_add_lvalue_reference(...) -> type_identity<T>;
-
-    template<class T>
-    auto try_add_rvalue_reference(int) -> type_identity<T&&>;
-    template<class T>
-    auto try_add_rvalue_reference(...) -> type_identity<T>;
-  } // end of helper namespace
-
-  template<class T>
-  struct add_lvalue_reference : decltype(_add_reference_::try_add_lvalue_reference<T>(0)) { };
-
-  template<class T>
-  struct add_rvalue_reference : decltype(_add_reference_::try_add_rvalue_reference<T>(0)) { };
-
-  template<class T>
-  using add_lvalue_reference_t = typename add_lvalue_reference<T>::type;
-  template<class T>
-  using add_rvalue_reference_t = typename add_rvalue_reference<T>::type;
-  // End of add_lvalue_reference and add_rvalue_reference
-
-
-  // Start of remove_cvref implementation:
-  template<class T>
-  struct remove_cvref {
-    typedef remove_cv_t<remove_reference_t<T>> type;
-  };
-
-  template<class T>
-  using remove_cvref_t = typename remove_cvref<T>::type;
-  // End of remove_cvref implementation
-
-
-  // Start of reference type checker implementations:
-  template<class T> 
-  struct is_lvalue_reference : public false_type { };
-  template<class T> 
-  struct is_lvalue_reference<T&> : public true_type { };
-
-  template<class T>
-  inline constexpr bool is_lvalue_reference_v = is_lvalue_reference<T>::value;
-
-  template<class T>
-  struct is_rvalue_reference : public false_type { };
-  template<class T>
-  struct is_rvalue_reference<T&&> : public true_type { };
-
-  template<class T>
-  inline constexpr bool is_rvalue_reference_v = is_rvalue_reference<T>::value;
-  // End of reference type checker implementations
-
-
-  // Start of remove_pointer implementation:
-  template<class _Tp, class>
-  struct __remove_pointer_helper { using type = _Tp; };
-
-  template<class _Tp, class _Up>
-  struct __remove_pointer_helper<_Tp, _Up*> { using type = _Up; };
 
   template<class _Tp>
-  struct remove_pointer : public __remove_pointer_helper<_Tp, remove_cv_t<_Tp>> { };
-  
-  template<class _Tp>
-  using remove_pointer_t = typename remove_pointer<_Tp>::type;
-  // End of remove_pointer implementation
-
-
-  // Start of add_pointer implementation:
-  template<class _Tp, class = void>
-  struct __add_pointer_helper { using type = _Tp; };
-
-  template<class _Tp>
-  struct __add_pointer_helper<_Tp, void_t<_Tp*>> { using type = _Tp*; };
-
-  template<class _Tp>
-  struct add_pointer : public __add_pointer_helper<_Tp> { };
-
-  template<class _Tp>
-  struct add_pointer<_Tp&> { using type = _Tp*; };
-
-  template<class _Tp>
-  struct add_pointer<_Tp&&> { using type = _Tp*; };
-
-  template<class _Tp>
-  using add_pointer_t = typename add_pointer<_Tp>::type;
-  // End of add_pointer implementation
-
-
-  // Start of declval() implementation (NEED TO TEST UPDATED IMPL)
-  template<class _Tp, class _Up = _Tp&&>
-  _Up __declval(int);
-
-  template<class _Tp>
-  _Tp __declval(long);
-
-  template<class _Tp>
-  struct __declval_protector { static const bool __stop = false; };
-
-  template<class _Tp>
-  auto declval() noexcept -> decltype(__declval<_Tp>(0)) {
-    static_assert(__declval_protector<_Tp>::__stop, "declval() must not be used in evaluated expressions!");
-    return __declval<_Tp>(0);
+  constexpr inline reference_wrapper<_Tp> ref(_Tp& __t) noexcept {
+    return reference_wrapper<_Tp>(__t);
   }
 
-  //template<class T>
-  //typename add_rvalue_reference<T>::type declval() noexcept;
-  // this commented out implementation is what I originally used, but it has no protection for incorrect use.
-  // End of declval() implementation
-
-
-  // Start of move() implementation for move semantics using r-value reference variables(T&&)
-  template<class T>
-  constexpr remove_reference_t<T>&& move(T&& t) {
-    return static_cast<remove_reference_t<T>&&>(t);
-  } 
-  // End of move() implementation
-
-
-  // Start of iter_move implementation: (not sure if this will work)
-  template<class _Iter>
-  constexpr auto iter_move(_Iter&& it) noexcept(noexcept(*it)) -> decltype(move(*it)) {
-    return move(*it);
+  template<class _Tp>
+  constexpr inline reference_wrapper<const _Tp> cref(const _Tp& __t) noexcept {
+    return reference_wrapper<const _Tp>(__t);
   }
-  // End of iter_move implementation
-
-
-  // Start of forward() implementation for forwarding r-values:
-  template<class T>
-  constexpr T&& forward(remove_reference_t<T>& t) noexcept {
-    return static_cast<T&&>(t);
-  }
-
-  template<class T>
-  constexpr T&& forward(remove_reference_t<T>&& t) noexcept {
-    static_assert(!is_lvalue_reference<T>::value, "Cannot forward an rvalue as an lvalue");
-    return static_cast<T&&>(t);
-  }
-  // End of forward() implementation
-
-
-  // Start of is_constructible checker implementations: (is_destructible had to be in Type_Traits.hpp since my implementation uses functions from Type_Traits)
-  /*
-    I'm currently using the current libstdc++ implementation of the is_constructible meta-functions.
-    I also have another implementation commented out bellow this one which is another possible implementation, but I haven't been able to test it yet.
-    If the second implementation ends up working just as well as the libstdc++ implementation then I will switch to it for less code and better readability.
-  */
-  // NOTE: is_constructible and is_destructible are currently implemented in Type_Traits.hpp since it uses some type trait meta-functions that I can't move over to this file. the is_destructible implementation in Type_Traits.hpp is the same as in libstdc++
-  // second implementation: (wont use until I test it to make sure it works correctly)
-  /*
-  template<class, class T, class... Args>
-  struct is_constructible_ : public false_type { };
-
-  template<class T, class... Args>
-  struct is_constructible_<void_t<decltype(T(declval<Args>()...))>, T, Args...> : public true_type { };
-
-  template<class T, class... Args>
-  using is_constructible = is_constructible_<void_t<>, T, Args...>;
-
-  template<class T>
-  struct is_default_constructible : is_constructible<T> { };
-  
-  template<class T>
-  inline constexpr bool is_default_constructible_v = is_default_constructible<T>::value;
-
-  template<class T>
-  struct is_copy_constructible : is_constructible<T, typename add_lvalue_reference<typename add_const<T>::type>::type> { };
-  
-  template<class T>
-  inline constexpr bool is_copy_constructible_v = is_copy_constructible<T>::value;
-
-  template<class T>
-  struct is_move_constructible : public is_constructible<T, typename add_rvalue_reference<T>::type> { };
-  
-  template<class T>
-  inline constexpr bool is_move_constructible_v = is_move_constructible<T>::value;
-  */
-  // End of is_constructible checker implementations
-
-
-  // Start of is_assignable checker implementations: (changed to be the same as in libstdc++)
-  namespace _assignable_helper { // start of private helper namespace
-    
-    template<class _Tp, class _Up>
-    class __is_assignable_helper : public __sfinae_types {
-      template<class _Tp1, class _Up1>
-      static decltype(declval<_Tp1>() = declval<_Up1>(), __one()) __test(int);
-
-      template<class, class>
-      static __two __test(...);
-
-      public:
-        static constexpr bool value = sizeof(__test<_Tp, _Up>(0)) == 1;
-    };
-
-    template<class _Tp, class _Up> // public
-    struct is_assignable 
-      : public bool_constant<__is_assignable_helper<_Tp, _Up>::value> { };
-
-    template<class _Tp, bool = is_void<_Tp>::value>
-    struct __is_copy_assignable_impl;
-
-    template<class _Tp>
-    struct __is_copy_assignable_impl<_Tp, true> : public false_type { };
-
-    template<class _Tp>
-    struct __is_copy_assignable_impl<_Tp, false>
-      : public is_assignable<_Tp&, const _Tp&> { };
-    
-    template<class _Tp> // public
-    struct is_copy_assignable : public __is_copy_assignable_impl<_Tp> { };
-
-    template<class _Tp, bool = is_void<_Tp>::value>
-    struct __is_move_assignable_impl;
-
-    template<class _Tp>
-    struct __is_move_assignable_impl<_Tp, true> : public false_type { };
-
-    template<class _Tp>
-    struct __is_move_assignable_impl<_Tp, false>
-      : public is_assignable<_Tp&, _Tp&&> { };
-
-    template<class _Tp>
-    struct is_move_assignable : public __is_move_assignable_impl<_Tp> { };
-
-  } // end of helper namespace
-
-  template<class _Tp, class _Up>
-  struct is_assignable 
-    : public bool_constant<_assignable_helper::__is_assignable_helper<_Tp, _Up>::value> { };
 
   template<class _Tp>
-  struct is_copy_assignable 
-    : public _assignable_helper::__is_copy_assignable_impl<_Tp> { };
+  void ref(const _Tp&&) = delete;
 
   template<class _Tp>
-  struct is_move_assignable
-    : public _assignable_helper::__is_move_assignable_impl<_Tp> { };
+  void cref(const _Tp&&) = delete;
 
-  /*
-    Original implementation I used, but it doesn't work properly
-    leaving this code here and commented out for when I have a chance to better test these functions
-    If these end up working as well as the implementation above then I will just revert back to the one bellow.
-    Unfortunately I'm not able to use the most modern implementation of is_assignable since libstdc++
-    uses a compiler intrinsic(__is_assignable(type)) which is not available in the current GCC version that the arduino IDE uses
-  */
-  /*
-  template<class T, class U, class = void>
-  struct is_assignable : public false_type { };
-
-  template<class T, class U>
-  struct is_assignable<T, U, decltype(declval<T>() = declval<U>(), void())> : public true_type { };
-
-  template<class T, class U>
-  inline constexpr bool is_assignable_v = is_assignable<T, U>::value;
-
-  template<class T>
-  struct is_copy_assignable : is_assignable<typename add_lvalue_reference<T>::type, typename add_lvalue_reference<const T>::type> { };
-
-  template<class T>
-  inline constexpr bool is_copy_assignable_v = is_copy_assignable<T>::value;
-
-  template<class T>
-  struct is_move_assignable : is_assignable<typename add_lvalue_reference<T>::type, typename add_rvalue_reference<T>::type> { };
-
-  template<class T>
-  inline constexpr bool is_move_assignable_v = is_move_assignable<T>::value;
-  */
-  // End of is_assignable checker implementations
-
-
-  // Start of initial swap() implementation:
-  template<class T>
-  constexpr inline void swap(T& a, T& b) noexcept(/*is_move_constructible<T>::value &&*/ is_move_assignable<T>::value) {
-    T tmp = move(a);
-    a = move(b);
-    b = move(tmp);
+  template<class _Tp>
+  constexpr inline reference_wrapper<_Tp> ref(reference_wrapper<_Tp> __t) noexcept {
+    return __t;
   }
 
-  template<class ForwardIt1, class ForwardIt2>
-  constexpr inline void iter_swap(ForwardIt1 a, ForwardIt2 b) {
-    swap(*a, *b);
+  template<class _Tp>
+  constexpr inline reference_wrapper<const _Tp> cref(reference_wrapper<_Tp> __t) noexcept {
+    return { __t.get() };
   }
-
-  template<class ForwardIt1, class ForwardIt2>
-  constexpr inline void swap_ranges(ForwardIt1 first1, ForwardIt1 last1, ForwardIt2 first2) {
-    for(; first1 != last1; ++first1, ++first2) iter_swap(first1, first2);
-    //return first2;
-  }
-
-  template<class T, size_t N>
-  constexpr inline void swap(T (&a)[N], T (&b)[N]) noexcept(noexcept(swap(*a, *b))) {
-    swap_ranges(a, a + N, b);
-  }
-  // End of initial swap() implementation
 
 } // end of std:: namespace
 
+// End of bits/refwrap header implementations
 
-#endif // end of header
+
+// Start of implementations from the functional header in libstdc++:(incomplete)
+
+namespace std _DLIB_VISIBILITY {
+
+  template<int _Num>
+  struct _Placeholder { }; // not sure if I need this yet. I will delete if unused
+
+  template<class _Callable, class... _Args>
+  inline constexpr invoke_result_t<_Callable, _Args...>
+  invoke(_Callable&& __fn, _Args&&... __args) noexcept(is_nothrow_invocable<_Callable, _Args...>::value) {
+    return __detail::__invoke(std::forward<_Callable>(__fn), std::forward<_Args>(__args)...);
+  }
+
+  template<class _Res, class _Callable, class... _Args>
+  constexpr typename enable_if<is_invocable_r<_Res, _Callable, _Args...>::value, _Res>::type
+  invoke_r(_Callable&& __fn, _Args&&... __args) noexcept(is_nothrow_invocable_r<_Res, _Callable, _Args...>::value) {
+    return __detail::__invoke_r<_Res>(std::forward<_Callable>(__fn), std::forward<_Args>(__args)...);
+  }
+
+  // specialization for when the _Callable type is not able to do invoke_r. 
+  // This isn't necessary, but I did this for a cleaner error message when invoke_r fails the is_invocable_r check.
+  template<class _Res, class _Callable, class... _Args>
+  [[noreturn]]
+  constexpr typename enable_if<!is_invocable_r<_Res, _Callable, _Args...>::value, _Res>::type
+  invoke_r(_Callable&&, _Args&&...) noexcept {
+    static_assert(is_invocable_r<_Res, _Callable, _Args...>::value,
+      "std::invoke_r requires that the return type of the invocable type is convertible to the _Res/R type!");
+  }
+
+  namespace __detail { // continuing implementation sugar in private namespace
+
+    template<class _MemFunPtr,
+            bool __is_mem_fn = is_member_function_pointer<_MemFunPtr>::value>
+    class _Mem_fn_base : public _Mem_fn_traits<_MemFunPtr>::__maybe_type {
+      using _Traits = _Mem_fn_traits<_MemFunPtr>;
+
+      using _Arity = typename _Traits::__arity;
+      using _Varargs = typename _Traits::__vararg;
+
+      template<class _Func, class... _BoundArgs>
+      friend struct _Bind_check_arity;
+
+      _MemFunPtr _M_pmf;
+
+      public:
+        using result_type = typename _Traits::__result_type;
+
+        explicit constexpr _Mem_fn_base(_MemFunPtr __pmf) noexcept : _M_pmf(__pmf) { }
+
+        template<class... _Args>
+        constexpr auto operator()(_Args&&... __args) const
+        noexcept(noexcept(__detail::__invoke(_M_pmf, std::forward<_Args>(__args)...)))
+        -> decltype(__detail::__invoke(_M_pmf, std::forward<_Args>(__args)...)) {
+          return __detail::__invoke(_M_pmf, std::forward<_Args>(__args)...);
+        }
+    };
+
+    template<class _MemObjPtr>
+    class _Mem_fn_base<_MemObjPtr, false> {
+      using _Arity = integral_constant<size_t, 0>;
+      using _Varargs = false_type;
+
+      template<class _Func, class... _BoundArgs>
+      friend struct _Bind_check_arity;
+
+      _MemObjPtr _M_pm;
+
+      public:
+        explicit constexpr _Mem_fn_base(_MemObjPtr __pm) noexcept : _M_pm(__pm) { }
+
+        template<class _Tp>
+        constexpr auto operator()(_Tp&& __obj) const
+        noexcept(noexcept(__detail::__invoke(_M_pm, std::forward<_Tp>(__obj))))
+        -> decltype(__detail::__invoke(_M_pm, std::forward<_Tp>(__obj))) {
+          return __detail::__invoke(_M_pm, std::forward<_Tp>(__obj));
+        }
+    };
+
+    template<class _MemberPointer>
+    struct _Mem_fn; // left undefined
+
+    template<class _Res, class _Class>
+    struct _Mem_fn<_Res _Class::*> : public _Mem_fn_base<_Res _Class::*> {
+      using _Mem_fn_base<_Res _Class::*>::_Mem_fn_base;
+    };
+
+  } // end of __detail:: namespace
+
+  template<class _Tp, class _Class>
+  constexpr inline __detail::_Mem_fn<_Tp _Class::*>
+  mem_fn(_Tp _Class::* __pm) noexcept {
+    return __detail::_Mem_fn<_Tp _Class::*>(__pm);
+  }
+
+} // end of std:: namespace
+
+// End of functional header implementations(incomplete)
+
+
+// Start of implementations from the bits/stl_construct header from libstdc++:
+
+namespace std _DLIB_VISIBILITY {
+
+  namespace __detail { // namespace for internal implementations
+
+    template<class _T1, class... _Args>
+    inline void _Construct(_T1* __p, _Args&&... __args) {
+      ::new(static_cast<void*>(__p)) _T1(std::forward<_Args>(__args)...);
+    }
+
+    template<class _Tp>
+    inline void _Destroy(_Tp* __pointer) {
+      __pointer->~_Tp();
+    }
+
+    template<bool>
+    struct _Destroy_aux {
+      template<class _ForwardIterator>
+      static void __destroy(_ForwardIterator __first, _ForwardIterator __last) {
+        for(; __first != __last; ++__first)
+          _Destroy(__addressof(*__first));
+      }
+    };
+
+    template<>
+    struct _Destroy_aux<true> {
+      template<class _ForwardIterator>
+      static void __destroy(_ForwardIterator, _ForwardIterator) { }
+    };
+
+    template<class _ForwardIterator>
+    inline void _Destroy(_ForwardIterator __first, _ForwardIterator __last) {
+      typedef typename iterator_traits<_ForwardIterator>::value_type _Value_type;
+      _Destroy_aux<__has_trivial_destructor(_Value_type)>::__destroy(__first, __last);
+    }
+
+    template<class _ForwardIterator, class _Allocator>
+    void _Destroy(_ForwardIterator __first, _ForwardIterator __last, _Allocator& __alloc) {
+      typedef __gnu_cxx::__alloc_traits<_Allocator> __traits;
+      for(; __first != __last; ++__first)
+        __traits::destroy(__alloc, __addressof(*__first));
+    }
+
+    template<class _ForwardIterator, class _Tp>
+    inline void _Destroy(_ForwardIterator __first, _ForwardIterator __last, allocator<_Tp>&) {
+      _Destroy(__first, __last);
+    }
+
+  } // end of __detail:: namespace
+
+} // end of std:: namespace
+
+// End of bits/stl_construct header implementations
+
+
+// Start of implementations from the bits/stl_uninitialized header from libstdc++:
+
+namespace std _DLIB_VISIBILITY {
+
+  namespace __detail { // namespace for internal implementations
+
+    template<bool _TrivialValueTypes>
+    struct __uninitialized_copy {
+      template<class _InputIterator, class _ForwardIterator>
+      static _ForwardIterator __uninit_copy(_InputIterator __first, _InputIterator __last, _ForwardIterator __result) {
+        _ForwardIterator __cur = __result;
+        __try {
+          for(; __first != __last; ++__first, ++__cur)
+            _Construct(__addressof(*__cur), *__first);
+          return __cur;
+        } __catch(...) {
+          _Destroy(__result, __cur);
+          __throw_exception_again;
+        }
+      }
+    };
+
+    template<>
+    struct __uninitialized_copy<true> {
+      template<class _InputIterator, class _ForwardIterator>
+      static _ForwardIterator __uninit_copy(_InputIterator __first, _InputIterator __last, _ForwardIterator __result) {
+        return copy(__first, __last, __result);
+      }
+    };
+
+  } // end of __detail:: namespace
+
+  
+  template<class _InputIterator, class _ForwardIterator>
+  inline _ForwardIterator uninitialized_copy(_InputIterator __first, _InputIterator __last, _ForwardIterator __result) {
+    typedef typename iterator_traits<_InputIterator>::value_type _ValueType1;
+    typedef typename iterator_traits<_ForwardIterator>::value_type _ValueType2;
+#   if (_CXX_OLD_CODE)
+    const bool __assignable = true; // pre c++11
+#   else
+    typedef typename iterator_traits<_InputIterator>::reference _RefType;
+    const bool __assignable = is_assignable<_ValueType1, _RefType>::value;
+#   endif
+    return __detail::__uninitialized_copy<__is_trivial(_ValueType1)
+                                       && __is_trivial(_ValueType2)
+                                       && __assignable
+                                       >::__uninit_copy(__first, __last, __result);
+  }
+
+
+  namespace __detail { // namespace for internal implementations
+
+    template<bool _TrivialValueType>
+    struct __uninitialized_fill {
+      template<class _ForwardIterator, class _Tp>
+      static void __uninit_fill(_ForwardIterator __first, _ForwardIterator __last, const _Tp& __x) {
+        _ForwardIterator __cur = __first;
+        __try {
+          for(; __cur != __last; ++__cur)
+            _Construct(__addressof(*__cur), __x);
+        } __catch(...) {
+          _Destroy(__first, __cur);
+          __throw_exception_again;
+        }
+      }
+    };
+
+    template<>
+    struct __uninitialized_fill<true> {
+      template<class _ForwardIterator, class _Tp>
+      static void __uninit_fill(_ForwardIterator __first, _ForwardIterator __last, const _Tp& __x) {
+        std::fill(__first, __last, __x);
+      }
+    };
+
+  } // end of __detail:: namespace
+
+
+  template<class _ForwardIterator, class _Tp>
+  inline void uninitialized_fill(_ForwardIterator __first, _ForwardIterator __last, const _Tp& __x) {
+    typedef typename iterator_traits<_ForwardIterator>::value_type _ValueType;
+#   if(_CXX_OLD_CODE)
+    const bool __assignable = true;
+#   else
+    const bool __assignable = is_copy_assignable<_ValueType>::value;
+#   endif
+    __detail::__uninitialized_fill<__is_trivial(_ValueType) && __assignable>::__uninit_fill(__first, __last, __x);
+  }
+
+
+  namespace __detail { // namespace for internal implementation
+
+    template<bool _TrivialValueType>
+    struct __uninitialized_fill_n {
+      template<class _ForwardIterator, class _Size, class _Tp>
+      static void __uninit_fill_n(_ForwardIterator __first, _Size __n, const _Tp& __x) {
+        _ForwardIterator __cur = __first;
+        __try {
+          for(; __n > 0; --__n, ++__cur)
+            _Construct(__addressof(*__cur), __x);
+        } __catch(...) {
+          _Destroy(__first, __cur);
+          __throw_exception_again;
+        }
+      }
+    };
+
+    template<>
+    struct __uninitialized_fill_n<true> {
+      template<class _ForwardIterator, class _Size, class _Tp>
+      static void __uninit_fill_n(_ForwardIterator __first, _Size __n, const _Tp& __x) {
+        fill_n(__first, __n, __x);
+      }
+    };
+
+  } // end of __detail:: namespace
+
+
+  template<class _ForwardIterator, class _Size, class _Tp>
+  inline void uninitialized_fill_n(_ForwardIterator __first, _Size __n, const _Tp& __x) {
+    typedef typename iterator_traits<_ForwardIterator>::value_type _ValueType;
+#   if (_CXX_OLD_CODE)
+    const bool __assignable = true;
+#   else
+    const bool __assignable = is_copy_assignable<_ValueType>::value;
+#   endif
+    __detail::__uninitialized_fill_n<__is_trivial(_ValueType) 
+                                  && __assignable>::__uninit_fill_n(__first, __n, __x);
+  }
+
+
+  namespace __detail { // namespace for internal implementations
+
+    template<class _InputIterator, class _ForwardIterator, class _Allocator>
+    _ForwardIterator __uninitialized_copy_a(_InputIterator __first, _InputIterator __last,
+                                            _ForwardIterator __result, _Allocator& __alloc) {
+      _ForwardIterator __cur = __result;
+      __try {
+        typedef __gnu_cxx::__alloc_traits<_Allocator> __traits;
+        for(; __first != __last; ++__first, ++__cur)
+          __traits::construct(__alloc, __addressof(*__cur), *__first);
+        return __cur;
+      } __catch(...) {
+        _Destroy(__result, __cur, __alloc);
+        __throw_exception_again;
+      }
+    }
+
+    template<class _InputIterator, class _ForwardIterator, class _Tp>
+    inline _ForwardIterator __uninitialized_copy_a(_InputIterator __first, _InputIterator __last,
+                                                   _ForwardIterator __result, allocator<_Tp>&) {
+      return uninitialized_copy(__first, __last, __result);
+    }
+
+    template<class _InputIterator, class _ForwardIterator, class _Allocator>
+    inline _ForwardIterator __uninitialized_move_a(_InputIterator __first, _InputIterator __last,
+                                                   _ForwardIterator __result, _Allocator& __alloc) {
+      return __uninitialized_copy_a(_GLIBCXX_MAKE_MOVE_ITERATOR(__first),
+                                    _GLIBCXX_MAKE_MOVE_ITERATOR(__last),
+                                    __result, __alloc);
+    }
+
+    template<class _InputIterator, class _ForwardIterator, class _Allocator>
+    inline _ForwardIterator 
+    __uninitialized_move_if_noexcept_a(_InputIterator __first, _InputIterator __last,
+                                       _ForwardIterator __result, _Allocator& __alloc) {
+      return __uninitialized_copy_a(_GLIBCXX_MAKE_MOVE_IF_NOEXCEPT_ITERATOR(__first),
+                                    _GLIBCXX_MAKE_MOVE_IF_NOEXCEPT_ITERATOR(__last),
+                                    __result, __alloc);
+    }
+
+    template<class _ForwardIterator, class _Tp, class _Allocator>
+    void __uninitialized_fill_a(_ForwardIterator __first, _ForwardIterator __last,
+                                const _Tp& __x, _Allocator& __alloc) {
+      _ForwardIterator __cur = __first;
+      __try {
+        typedef __gnu_cxx::__alloc_traits<_Allocator> __traits;
+        for(; __cur != __last; ++__cur)
+          __traits::construct(__alloc, __addressof(*__cur), __x);
+      } __catch(...) {
+        _Destroy(__first, __cur, __alloc);
+        __throw_exception_again;
+      }
+    }
+
+    template<class _ForwardIterator, class _Tp, class _Tp2>
+    inline void __uninitialized_fill_a(_ForwardIterator __first, _ForwardIterator __last,
+                                       const _Tp& __x, allocator<_Tp2>&) {
+      uninitialized_fill(__first, __last, __x);
+    }
+
+    template<class _ForwardIterator, class _Size, class _Tp, class _Allocator>
+    void __uninitialized_fill_n_a(_ForwardIterator __first, _Size __n,
+                                  const _Tp& __x, _Allocator& __alloc) {
+      _ForwardIterator __cur = __first;
+      __try {
+        typedef __gnu_cxx::__alloc_traits<_Allocator> __traits;
+        for(; __n > 0; --__n, ++__cur)
+          __traits::construct(__alloc, __addressof(*__cur), __x);
+      } __catch(...) {
+        _Destroy(__first, __cur, __alloc);
+        __throw_exception_again;
+      }
+    }
+
+    template<class _ForwardIterator, class _Size, class _Tp, class _Tp2>
+    inline void __uninitialized_fill_n_a(_ForwardIterator __first, _Size __n,
+                                         const _Tp& __x, allocator<_Tp2>&) {
+      uninitialized_fill_n(__first, __n, __x);
+    }
+
+    template<class _InputIterator1, class _InputIterator2,
+             class _ForwardIterator, class _Allocator>
+    inline _ForwardIterator __uninitialized_copy_move(_InputIterator1 __first1, _InputIterator1 __last1,
+                                                      _InputIterator2 __first2, _InputIterator2 __last2,
+                                                      _ForwardIterator __result, _Allocator& __alloc) {
+      _ForwardIterator __mid = __uninitialized_copy_a(__first1, __last1, __result, __alloc);
+      __try {
+        return __uninitialized_move_a(__first2, __last2, __mid, __alloc);
+      } __catch(...) {
+        _Destroy(__result, __mid, __alloc);
+        __throw_exception_again;
+      }
+    }
+
+    template<class _InputIterator1, class _InputIterator2,
+             class _ForwardIterator, class _Allocator>
+    inline _ForwardIterator __uninitialized_move_copy(_InputIterator1 __first1, _InputIterator1 __last1,
+                                                      _InputIterator2 __first2, _InputIterator2 __last2,
+                                                      _ForwardIterator __result, _Allocator& __alloc) {
+      _ForwardIterator __mid = __uninitialized_move_a(__first1, __last1, __result, __alloc);
+      __try {
+        return __uninitialized_copy_a(__first2, __last2, __mid, __alloc);
+      } __catch(...) {
+        _Destroy(__result, __mid, __alloc);
+        __throw_exception_again;
+      }
+    }
+
+    template<class _ForwardIterator, class _Tp, class _InputIterator, class _Allocator>
+    inline _ForwardIterator __uninitialized_fill_move(_ForwardIterator __result, _ForwardIterator __mid,
+                                                      const _Tp& __x, _InputIterator __first,
+                                                      _InputIterator __last, _Allocator& __alloc) {
+      __uninitialized_fill_a(__result, __mid, __x, __alloc);
+      __try {
+        return __uninitialized_move_a(__first, __last, __mid, __alloc);
+      } __catch(...) {
+        _Destroy(__result, __mid, __alloc);
+        __throw_exception_again;
+      }
+    }
+
+    template<class _InputIterator, class _ForwardIterator, class _Tp, class _Allocator>
+    inline void __uninitialized_move_fill(_InputIterator __first1, _InputIterator __last1,
+                                          _ForwardIterator __first2, _ForwardIterator __last2,
+                                          const _Tp& __x, _Allocator& __alloc) {
+      _ForwardIterator __mid2 = __uninitialized_move_a(__first1, __last1, __first2, __alloc);
+      __try {
+        __uninitialized_fill_a(__mid2, __last2, __x, __alloc);
+      } __catch(...) {
+        _Destroy(__first2, __mid2, __alloc);
+        __throw_exception_again;
+      }
+    }
+
+    template<bool _TrivialValueType>
+    struct __uninitialized_default_1 {
+      template<class _ForwardIterator>
+      static void __uninit_default(_ForwardIterator __first, _ForwardIterator __last) {
+        _ForwardIterator __cur = __first;
+        __try {
+          for(; __cur != __last; ++__cur)
+            _Construct(__addressof(*__cur));
+        } __catch(...) {
+          _Destroy(__first, __cur);
+          __throw_exception_again;
+        }
+      }
+    };
+
+    template<>
+    struct __uninitialized_default_1<true> {
+      template<class _ForwardIterator>
+      static void __uninit_default(_ForwardIterator __first, _ForwardIterator __last) {
+        typedef typename iterator_traits<_ForwardIterator>::value_type _ValueType;
+        fill(__first, __last, _ValueType());
+      }
+    };
+
+    template<bool _TrivialValueType>
+    struct __uninitialized_default_n_1 {
+      template<class _ForwardIterator, class _Size>
+      static void __uninit_default_n(_ForwardIterator __first, _Size __n) {
+        _ForwardIterator __cur = __first;
+        __try {
+          for(; __n > 0; --__n, ++__cur)
+            _Construct(__addressof(*__cur));
+        } __catch(...) {
+          _Destroy(__first, __cur);
+          __throw_exception_again;
+        }
+      }
+    };
+
+    template<>
+    struct __uninitialized_default_n_1<true> {
+      template<class _ForwardIterator, class _Size>
+      static void __uninit_default_n(_ForwardIterator __first, _Size __n) {
+        typedef typename iterator_traits<_ForwardIterator>::value_type _ValueType;
+        fill_n(__first, __n, _ValueType());
+      }
+    };
+
+    template<class _ForwardIterator>
+    inline void __uninitialized_default(_ForwardIterator __first, _ForwardIterator __last) {
+      typedef typename iterator_traits<_ForwardIterator>::value_type _ValueType;
+      const bool __assignable = is_copy_assignable<_ValueType>::value;
+      __uninitialized_default_1<__is_trivial(_ValueType)
+                             && __assignable>::__uninit_default(__first, __last);
+    }
+
+    template<class _ForwardIterator, class _Size>
+    inline void __uninitialized_default_n(_ForwardIterator __first, _Size __n) {
+      typedef typename iterator_traits<_ForwardIterator>::value_type _ValueType;
+      const bool __assignable = is_copy_assignable<_ValueType>::value;
+      __uninitialized_default_n_1<__is_trivial(_ValueType)
+                               && __assignable>::__uninit_default_n(__first, __n);
+    }
+
+    template<class _ForwardIterator, class _Allocator>
+    void __uninitialized_default_a(_ForwardIterator __first, _ForwardIterator __last, _Allocator& __alloc) {
+      _ForwardIterator __cur = __first;
+      __try {
+        typedef __gnu_cxx::__alloc_traits<_Allocator> __traits;
+        for(; __cur != __last; ++__cur)
+          __traits::construct(__alloc, __addressof(*__cur));
+      } __catch(...) {
+        _Destroy(__first, __cur, __alloc);
+        __throw_exception_again;
+      }
+    }
+
+    template<class _ForwardIterator, class _Tp>
+    inline void __uninitialized_default_a(_ForwardIterator __first, _ForwardIterator __last, allocator<_Tp>&) {
+      __uninitialized_default(__first, __last);
+    }
+
+    template<class _ForwardIterator, class _Size, class _Allocator>
+    void __uninitialized_default_n_a(_ForwardIterator __first, _Size __n, _Allocator& __alloc) {
+      _ForwardIterator __cur = __first;
+      __try {
+        typedef __gnu_cxx::__alloc_traits<_Allocator> __traits;
+        for(; __n > 0; --__n, ++__cur)
+          __traits::construct(__alloc, __addressof(*__cur));
+      } __catch(...) {
+        _Destroy(__first, __cur, __alloc);
+        __throw_exception_again;
+      }
+    }
+
+    template<class _ForwardIterator, class _Size, class _Tp>
+    inline void __uninitialized_default_n_a(_ForwardIterator __first, _Size __n, allocator<_Tp>&) {
+      __uninitialized_default_n(__first, __n);
+    }
+
+    template<class _InputIterator, class _Size, class _ForwardIterator>
+    _ForwardIterator __uninitialized_copy_n(_InputIterator __first, _Size __n,
+                                            _ForwardIterator __result, input_iterator_tag) {
+      _ForwardIterator __cur = __result;
+      __try {
+        for(; __n > 0; --__n, ++__first, ++__cur)
+          _Construct(__addressof(*__cur), *__first);
+        return __cur;
+      } __catch(...) {
+        _Destroy(__result, __cur);
+        __throw_exception_again;
+      }
+    }
+
+    template<class _RandomAccessIterator, class _Size, class _ForwardIterator>
+    inline _ForwardIterator __uninitialized_copy_n(_RandomAccessIterator __first, _Size __n,
+                                                   _ForwardIterator __result, random_access_iterator_tag) {
+      return uninitialized_copy(__first, __first + __n, __result);
+    }
+
+  } // end of __detail:: namespace
+
+
+  template<class _InputIterator, class _Size, class _ForwardIterator>
+  inline _ForwardIterator uninitialized_copy_n(_InputIterator __first, _Size __n, _ForwardIterator __result) {
+    return __detail::__uninitialized_copy_n(__first, __n, __result,
+                                            __detail::__iterator_category(__first));
+  }
+
+} // end of std:: namespace
+
+// End of bits/stl_uninitialized header implementations
+
+
+// Start of bits/functional_hash header implementation:
+namespace std _DLIB_VISIBILITY {
+
+  namespace __detail { // namespace for internal implementations
+
+    size_t _Hash_bytes(const void* __ptr, size_t __len, size_t __seed);
+
+    size_t _Fnv_hash_bytes(const void* __ptr, size_t __len, size_t __seed);
+
+
+    template<class _Result, class _Arg>
+    struct __hash_base {
+      typedef _Result result_type;
+      typedef _Arg argument_type;
+    };
+
+  } // end of __detail:: namespace
+
+
+  template<class _Tp>
+  struct hash;
+
+  template<class _Tp>
+  struct hash<_Tp*> : public __detail::__hash_base<size_t, _Tp*> {
+    size_t operator()(_Tp* __p) const noexcept {
+      return reinterpret_cast<size_t>(__p);
+    }
+  };
+
+
+  // Helper macro for integer specializations
+# define _Cxx_hashtable_define_trivial_hash(_Tp) \
+  template<> \
+  struct hash<_Tp> : public __detail::__hash_base<size_t, _Tp> { \
+    size_t operator()(_Tp __val) const noexcept { \
+      return static_cast<size_t>(__val); \
+    } \
+  };
+
+  _Cxx_hashtable_define_trivial_hash(bool)
+
+  _Cxx_hashtable_define_trivial_hash(char)
+
+  _Cxx_hashtable_define_trivial_hash(signed char)
+
+  _Cxx_hashtable_define_trivial_hash(unsigned char)
+
+  _Cxx_hashtable_define_trivial_hash(wchar_t)
+
+  _Cxx_hashtable_define_trivial_hash(char16_t)
+
+  _Cxx_hashtable_define_trivial_hash(char32_t)
+
+  _Cxx_hashtable_define_trivial_hash(short)
+
+  _Cxx_hashtable_define_trivial_hash(int)
+
+  _Cxx_hashtable_define_trivial_hash(long)
+
+  _Cxx_hashtable_define_trivial_hash(long long)
+
+  _Cxx_hashtable_define_trivial_hash(unsigned short)
+
+  _Cxx_hashtable_define_trivial_hash(unsigned int)
+
+  _Cxx_hashtable_define_trivial_hash(unsigned long)
+
+  _Cxx_hashtable_define_trivial_hash(unsigned long long)
+
+  // undefining the no loner needed helper macro
+# undef _Cxx_hashtable_define_trivial_hash
+
+
+  namespace __detail { // continuing internal namespace
+
+    struct _Hash_impl {
+      static size_t hash(const void* __ptr, size_t __clength,
+                         size_t __seed = static_cast<size_t>(0xC70F6907UL)) {
+        return _Hash_bytes(__ptr, __clength, __seed);
+      }
+
+      template<class _Tp>
+      static size_t hash(const _Tp& __val) {
+        return hash(&__val, sizeof(__val));
+      }
+
+      template<class _Tp>
+      static size_t __hash_combine(const _Tp& __val, size_t __hash) {
+        return hash(&__val, sizeof(__val), __hash);
+      }
+    }; // end of _Hash_impl class
+
+    
+    struct _Fnv_hash_impl {
+      static size_t hash(const void* __ptr, size_t __clength,
+                         size_t __seed = static_cast<size_t>(2166136261UL)) {
+        return _Fnv_hash_bytes(__ptr, __clength, __seed);
+      }
+
+      template<class _Tp>
+      static size_t hash(const _Tp& __val) {
+        return hash(&__val, sizeof(__val));
+      }
+
+      template<class _Tp>
+      static size_t __hash_combine(const _Tp& __val, size_t __hash) {
+        return hash(&__val, sizeof(__val), __hash);
+      }
+    }; // end of _Fnv_hash_impl class
+
+  } // end of __detail:: namespace
+
+
+  template<>
+  struct hash<float> : public __detail::__hash_base<size_t, float> {
+    size_t operator()(float __val) const noexcept {
+      return __val != 0.0f ? __detail::_Hash_impl::hash(__val) : 0;
+    }
+  };
+
+  template<>
+  struct hash<double> : public __detail::__hash_base<size_t, double> {
+    size_t operator()(double __val) const noexcept {
+      return __val != 0.0 ? __detail::_Hash_impl::hash(__val) : 0;
+    }
+  };
+
+  template<>
+  struct hash<long double> : public __detail::__hash_base<size_t, long double> {
+    _PURE_ size_t operator()(long double __val) const noexcept;
+  };
+
+
+  namespace __detail { // internal "hash trait" internal implementations
+
+    template<class _Hash>
+    struct __is_fast_hash : public true_type { };
+
+    template<>
+    struct __is_fast_hash<hash<long double>> : public false_type { };
+
+  } // end of __detail:: namespace
+
+} // end of std:: namespace
+// End of bits/functional_hash header implementation
+
+
+#endif // end of Utility.hpp
