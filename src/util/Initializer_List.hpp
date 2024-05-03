@@ -49,18 +49,13 @@
   limitations under the License.
 */
 /*
-  InitializerList.hpp [V1.0.0] (template class header/declaration file)
+  Initializer_List.hpp [V1.0.0] (Template header file for std::initializer_list)
     By: Andrey Stroitelev
 
-  ~This is a recreation of std::initializer_list for the arduino ide
-  ~This utility function allows you to make brace enclosed initializer list constructors
-    *for example: Vector<int> v = {12, 54, 123, 54};    ||    Map<int, char> m = {{1, 'a'}, {2, 'b'}, {3, 'c'}};
-
-  ~This file doesn't include any of the initializer_list implementations for any other c++ compiler like Clang and others since the arduino IDE just uses the GCC compiler.
-    *I may eventually add support for other compilers using preprocessor directives, but I currently dont see any scenario where someone would compile code for an arduino using a different compiler, and my Data_Structure_Lib library is designed for AVR boards since other boards like ESP boards natively support the std/stl libraries.
-
-  ~Also if anyone sees this and knows why it lets me add inline to constexpr here but not anywhere else please let me know why.
-    *I'm leaving in the inline keywords even though in this current version of the IDE constexpr is implicitly inline which typically gives an error or warning when compiled which it doesn't do here for some reason.
+  ~This is the implementation file for the std::initializer_list class.
+  ~This is pretty much an exact copy of the implementation in libstdc++ initializer_list.h
+  ~This class is a helper class that is a parameter pack that acts like a iterable container.
+    *This makes using parameter packs for non-templated definitions alot easier, but it can be used with templates as well when you can't use parameter packs.
 */
 
 
@@ -74,46 +69,55 @@
 
 
 #include <Arduino.h>
+#include "Config.h"
 
 
-// Start of std:: namespace:
+_DLIB_HEADER
+
+
+// Start of std::initializer_list implementation
 namespace std {
 
-  // Start of std::initializer_list implementation:
-  template<class _Ep>
+  template<class _E>
   class initializer_list {
-    const _Ep* __begin_;
-    size_t __size_;
-
-    inline constexpr initializer_list(const _Ep* __b, size_t __s) noexcept : __begin_(__b), __size_(__s) {  }
-
     public:
-      typedef _Ep value_type;
-      typedef const _Ep& reference;
-      typedef const _Ep& const_reference;
-      typedef size_t size_type;
-      typedef const _Ep* iterator;
-      typedef const _Ep* const_iterator;
+      typedef _E         value_type;
+      typedef const _E&  reference;
+      typedef const _E&  const_reference;
+      typedef size_t     size_type;
+      typedef const _E*  iterator;
+      typedef const _E*  const_iterator;
 
-      inline constexpr initializer_list(void) noexcept : __begin_(nullptr), __size_(0) { }
+    private:
+      iterator _M_array;
+      size_type _M_len;
 
-      inline constexpr size_t size(void) const noexcept { return __size_; }
+      constexpr initializer_list(const_iterator __a, size_type __l)
+      : _M_array(__a), _M_len(__l) { }
+    
+    public:
+      constexpr initializer_list() noexcept : _M_array(0), _M_len(0) { }
 
-      inline constexpr const _Ep* begin(void) const noexcept { return __begin_; }
-      inline constexpr const _Ep* end(void) const noexcept { return __begin_ + __size_; }
+      constexpr size_type size() const noexcept { return _M_len; }
+
+      constexpr const_iterator begin() const noexcept { return _M_array; }
+
+      constexpr const_iterator end() const noexcept { return begin() + size(); }
   };
-  // End of std::initializer_list implementation
-
-} // End of std:: namespace
 
 
-// Global specializations for begin() and end() iterator functions:
-template<class _Ep>
-constexpr const _Ep* begin(std::initializer_list<_Ep> __il) noexcept { return __il.begin(); }
+  // Specializations for std::begin and std::end
+  template<class _Tp>
+  constexpr const _Tp* begin(initializer_list<_Tp> __ils) noexcept {
+    return __ils.begin();
+  }
 
-template<class _Ep>
-constexpr const _Ep* end(std::initializer_list<_Ep> __il) noexcept { return __il.end(); }
-// End of begin() and end() specializations
+  template<class _Tp>
+  constexpr const _Tp* end(initializer_list<_Tp> __ils) noexcept {
+    return __ils.end();
+  }
+
+} // end of std:: namespace
 
 
-#endif // End of Initializer_List.hpp
+#endif // end of Initializer_List.hpp
