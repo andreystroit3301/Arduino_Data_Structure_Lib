@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2024 Andrey Stroitelev <email=andrey.stroitelev3301@gmail.com> (URL=https://github.com/andreystroit3301)
+  Copyright (C) 2024 Andrey Stroitelev <email=andrey.stroitelev3301@gmail.com> (URL=NA)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
   limitations under the License.
 */
 /*
-  {WIP}Data_Structure_Utility.hpp [V1.0.0]   (Library header file)
+  Data_Structure_Utility.hpp [V1.0.0]   (Library header file)
     By: Andrey Stroitelev
 
     Library Version: V1.0.0 // still adding data structures so there is no v1.0.0 yet
@@ -37,14 +37,30 @@
 #define _DATA_STRUCTURE_UTIL_HPP_
 
 
+// I will eventually organize these #include statments
 #include "Versions.h"
+#include "util/Config.h"
 #include "util/ArduinoUtil.h"
-#include "util/Utility.hpp"
+#include "util/Move.hpp"
+#include "util/Invoke.hpp"
+#include "util/Stdexcept.hpp"
+#include "util/UtilityBase.hpp"
+#include "util/Debug.hpp"
+#include "util/RangeAccess.hpp"
+#include "util/AlgoBase.hpp"
+#include "util/Array.hpp"
+#include "util/Pair.hpp"
+#include "util/Tuple.hpp"
 #include "util/Type_Traits.hpp"
+#include "util/Concept_Check.hpp"
+#include "util/Concepts.hpp"
 #include "util/Initializer_List.hpp"
 #include "util/Iterator_Traits.hpp"
+#include "util/Iterator_Funcs.hpp"
 #include "util/Iterator.hpp"
-#include "util/Container.hpp"
+#include "util/Allocator.hpp"
+#include "util/Alloc_Traits.hpp"
+#include "util/Utility.hpp"
 
 
 #ifndef _DATA_STRUCTURE_UTIL_VERSION_
