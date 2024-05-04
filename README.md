@@ -51,6 +51,7 @@ capacity of the container increases during reallocation.
 - [ ] Clean up macros in the Config file
 - [ ] Clean up comments
 - [ ] Clean up code to help avoid bugs
+- [ ] Possibly add profile mode and associated implementations for performance analysis and optimization. _(I might not implement this mode, but I most likely will)_
 - [ ] Create proper documentation aside from just the keywords.txt file
 - [ ] Add test functions to example sketch
 - [ ] Test everything that is currently implemented
