@@ -1,10 +1,8 @@
 # Arduino_Data_Structure_Lib
 
-- STATUS: INCOMPLETE/WIP -- No release yet
-   - Note: I have rewritten a big portion of the files that are currently in the repo, and I made a bunch of new files.
-         I have made alot of big changes and made alot of progress overall, but I'm not updating the repository just yet as I need to finish a file and re-organize the file structure before doing so.
-         Changing the file structure in github later will be alot more difficult. I started the data structures, and I currently have std::pair, std::array, std::tuple, and
-         std::initializer_list(if you would even consider this a data structure). I'm in the process of making std::vector, so I will update the repo after finishing std::vector and it's associated files.
+- STATUS: INCOMPLETE/WIP -- No full release yet
+
+## Description
 
 This is a library for the Arduino IDE(V2+) that adds a bunch of templated data structures, functions, and meta-functions from libstdc++(c++ STL) which are not natively available/supported for AVR boards on the 
 Arduino IDE. Most of this code is copied from various versions of GCC libstdc++, but primarily I used gcc-4.9.0 implementations. The purpose of this library is to just take the parts of c++ STL that are needed 
@@ -12,12 +10,13 @@ for the container classes along with the actual container classes and putting it
 
 This library was developed in Arduino IDE V2.3, so any users should have Arduino IDE V2.3 or newer to make sure the library works properly.
 
-## Description
+### Note:
 
 This library adds most of the data structures/containers found in the C++ STL library. These data structures will dynamically allocate and deallocate data, so they will function as they do for regular C++ 
 programming. I may eventually add static versions of the containers that have a constant max size for situations where you have very little SRAM like in a large program, or for when you're using an arduino
-board that has very low memory to begin with like the non-IOT boards and compact boards like the Arduino Nano or Arduino Pro Mini. I also added a large chunk of meta-functions from the <utility> and <type_traits>
-headers from libstdc++ since some will be required for the container implementations, and I just added some other meta-functions just because I think they could be useful when using the data structures.
+board that has very low memory to begin with like the non-IOT boards and compact boards like the Arduino Nano or Arduino Pro Mini. I also added a large chunk of meta-functions from headers such as
+<utility> and <type_traits> from libstdc++ since some will be required for the container implementations, and I just added some other meta-functions just because I think they could be useful when using the 
+data structures.
 
 This adds most of the well known data structures including but not limited to:
   - std::vector
@@ -30,46 +29,43 @@ This adds most of the well known data structures including but not limited to:
   - std::queue
   - std::stack
 
-These data structures will use dynamic memory allocation the same way they do in libstdc++. Some containers like std::array do not use dynamic memory allocation since they have a set max size, so these containers
-should be used over the dynamic containers when you have low memory to work with. Since the Arduino IDE is using C++11 with some C++14 support there is no concept or requires keywords, so to get around this I
-implemented the concepts as bool_constant trait checking meta-functions that will be static_asserted at compile time by the base class using CRTP which will force the inheriting class to implement all of the 
-required functions/operators to meet the necessary requirements and constraints such as being default constructible, copy constructible/assignable, incrementable, is_integral, etc,. The Type_Traits.hpp and 
-Utility.hpp files dont have the exact same functions as they do in libstdc++, so some type_traits functions are in Utility.hpp and some utility functions are in type_traits.hpp. I also added some of my own 
-functions which are mostly concepts being reimplemented as bool_constant metafunctions which will just do a check for a static_assertion somewhere to give the actual compile error. I may eventually make static 
-versions of the implemented containers to eliminate the risk of memory leaks and other issues for anyone who wants to use this library for one of the arduinos with really low memory like the UNO. I'm developing 
-this library directly in the Arduino IDE, and I'm using an Arduino MEGA(8k SRAM) for functional testing.
 
+### Custom Reallocation Feature _(Will implement in the future)_
 
-Also this library will throw a list of compiler warnings(if you have warnings enabled in the Arduin IDE). These warnings can be ignored. The warnings given are for variable templates which only started being
-properly supported in C++14, but the Arduino IDE runs on C++11 so a warning is given. The template variables(which are meta-function helpers) still work correctly and as intended, and they may become officially
-supported in future versions of the Arduino IDE which would get rid of the warnings. There is currently no way to add preprocessor directives to ignore specific warnings in the Arduino IDE. If the warnings are
-still a bother I may add a seperate version that replaces all of the helper variable instances with their standard meta-function syntax (instead of is_base_of_v<T> you would be required to use is_base_of<T>::value)
+The Containers in this library are just slightly modified copies of the original source code in libstdc++. Since it's a copy the container classes that have a dynamic capacity reallocate at the same
+rate as they do in libstdc++. By default whenever you exceed the capacity on a dynamic container such as std::vector it will allocate a new block of memory that is 2x the size of the old capacity, 
+so on an embedded system like an arduino the memory can get used up really fast when working with hundreds to thousands of elements. These containers can still be used in moderation perfectly fine, but 
+I am going to implement a set of config macros that will customize how these containers do reallocation. There will be a couple of macros relating to this. To help preserve available memory the user
+will be able to set how much the capacity multiplies during reallocation, or the user can make reallocation linear in which case the capacity will increase by a set amount of elements during reallocation.
+Currently this library can only use the default libstdc++ method of reallocation which doubles the capacity each time despite the macros for this feature being defined. I will most likely not start
+implementing this feature until I get alot more container classes finished since the way libstdc++ handles reallocation is alot more complicated that what is typically seen.
+Also this library implements the allocators defined in libstdc++ which all dynamic sized containers will use by default unless the user gives a custom allocator, but this doesn't affect how much the
+capacity of the container increases during reallocation.
+
 
 ## MY TO DO LIST:
-- [X] ~~Finish Iterator abstract base classes in util/Iterator.hpp~~(Using CRTP to assert requirements at compile time instead of using interface classes to remove virtual function overhead)
-- [X] ~~Finish Container abstract base class in util/Iterator.hpp~~(Same as above)
-- [ ] Create CRTP checker class for the different required iterator operators and expressions
-    + The requirements for iterators wont be exactly the same as in libstdc++, but the main operators will be required along with the necessary expressions needing to be valid
-- [ ] Create the main CRTP style base classes for the different iterator types
-- [ ] Create CRTP checker classes for the different required functions for containers
-- [ ] Create the main CRTP base class for containers
-- [ ] Create general CRTP meta-functions for trait checks such as is_incrementable etc. in util/Type_Traits.hpp
-- [ ] Finish adding needed functions and other quality of life functions to util/Utility.hpp
-- [ ] Finish adding needed functions and other quality of life functions to util/Type_Traits.hpp
-- [ ] Add new test functions to example sketch
+- [ ] Test the current file structure to make sure the include statements work correctly
+- [ ] Optimize whatever I can to futher reduce preformance cost for the Arduino
+- [ ] Update the main License of the repo to include the additional contributors from libstdc++ for the new files added to this library
+- [ ] Update license boilerplates on any files that need it
+- [ ] Clean up macros in the Config file
+- [ ] Clean up comments
+- [ ] Clean up code to help avoid bugs
+- [ ] Create proper documentation aside from just the keywords.txt file
+- [ ] Add test functions to example sketch
+- [ ] Test everything that is currently implemented
 - [ ] update keywords.txt with available functions, classes, and constants
-- [ ] Finish testing currently implemented functions, classes, and metafunctions
-- [ ] Create directory for the container classes implemented in this library
 - [ ] Create data structures
-    - [ ] implement std::pair
+    - [X] implement std::pair
+    - [X] implement std::tuple
     - [ ] implement std::stack
-    - [ ] implement std::vector
+    - [X] implement std::vector
     - [ ] implement std::list
     - [ ] implement std::forward_list
     - [ ] implement std::queue
     - [ ] implement std::priority_queue
     - [ ] implement std::dequeue
-    - [ ] implement std::array
+    - [X] implement std::array
     - [ ] implement std::map
     - [ ] implement std::unordered_map
     - [ ] implement std::multimap _(might not implement)_
@@ -84,13 +80,23 @@ still a bother I may add a seperate version that replaces all of the helper vari
     - [ ] implement std::flat_multiset _(might not implement)_
     - [ ] implement std::span _(might not implement)_
     - [ ] implement std::mdspan _(might not implement)_
-- [ ] Need to add global iterator functions/algorithms
-- [ ] Need to add container utility functions/algorithms with their respective specializations
+- [X] Need to add global iterator functions/algorithms
+- [X] Need to add container utility functions/algorithms with their respective specializations
+- [ ] Implement the customizable reallocation functionality
 - [ ] Need to add arduino utility functions for faster IO read/write
-- [ ] I will try to make util/Utility.hpp and util/Type_Traits.hpp usable seperately (not sure if I can. Currently these files need to be used together to work properly)
 - [ ] Possibly will add internal comparator control functions
 - [ ] Need to add register/port control functions for abstraction
 - [ ] Possibly will add functions for faster pinMode _(if possible)_
+
+
+## What I'm currently working on:
+- [ ] Implement std::stack
+- [ ] Implement std::queue
+- [ ] Implement std::dequeue
+- [ ] Update main license along with NOTICE file
+- [ ] Update boilerplates on files that need it
+- [ ] Test the current file structure
+- [ ] Possibly add the <bits/stl_heap> header from libstdc++
 
 ## NOTICE/CAUTION:
 * This library is made in the Arduino IDE, so I'm not sure if it will work in other IDEs like PlatformIO
