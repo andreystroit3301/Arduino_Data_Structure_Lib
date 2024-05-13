@@ -57,16 +57,16 @@ capacity of the container increases during reallocation.
 - [ ] Test everything that is currently implemented
 - [ ] update keywords.txt with available functions, classes, and constants
 - [ ] Create data structures
-    - [X] implement std::pair
-    - [X] implement std::tuple
-    - [ ] implement std::stack
-    - [X] implement std::vector
-    - [ ] implement std::list
-    - [ ] implement std::forward_list
-    - [ ] implement std::queue
-    - [ ] implement std::priority_queue
-    - [ ] implement std::dequeue
-    - [X] implement std::array
+    - [X] ~~implement std::pair~~
+    - [X] ~~implement std::tuple~~
+    - [X] ~~implement std::stack~~
+    - [X] ~~implement std::vector~~
+    - [X] ~~implement std::list~~
+    - [X] ~~implement std::forward_list~~
+    - [X] ~~implement std::queue~~
+    - [X] ~~implement std::priority_queue~~
+    - [X] ~~implement std::dequeue~~
+    - [X] ~~implement std::array~~
     - [ ] implement std::map
     - [ ] implement std::unordered_map
     - [ ] implement std::multimap _(might not implement)_
@@ -81,8 +81,8 @@ capacity of the container increases during reallocation.
     - [ ] implement std::flat_multiset _(might not implement)_
     - [ ] implement std::span _(might not implement)_
     - [ ] implement std::mdspan _(might not implement)_
-- [X] Need to add global iterator functions/algorithms
-- [X] Need to add container utility functions/algorithms with their respective specializations
+- [X] ~~Need to add global iterator functions/algorithms~~
+- [X] ~~Need to add container utility functions/algorithms with their respective specializations~~
 - [ ] Implement the customizable reallocation functionality
 - [ ] Need to add arduino utility functions for faster IO read/write
 - [ ] Possibly will add internal comparator control functions
