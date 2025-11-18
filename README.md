@@ -1,6 +1,7 @@
 # Arduino_Data_Structure_Lib
+### No longer working on this!!!
 
-- STATUS: INCOMPLETE/WIP -- No full release yet
+- STATUS: I made this for fun and never finished. Some stuff works, but I do not plan to finish this as any other stuff I can add will have very little usage. This should only be used for stuff like std::vector.
 
 ## Description
 
